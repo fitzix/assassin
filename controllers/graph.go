@@ -11,13 +11,10 @@ func GraphqlHandler() gin.HandlerFunc {
 	// NewExecutableSchema and Config are in the generated.go file
 	// Resolver is in the resolver.go file
 	h := handler.GraphQL(graph.NewExecutableSchema(graph.Config{Resolvers: &Resolver{}}))
-
-	return func(c *gin.Context) {
-		h.ServeHTTP(c.Writer, c.Request)
-	}
+	return gin.WrapF(h)
 }
 
 // Defining the Playground handler
 func PlaygroundHandler() gin.HandlerFunc {
-	return gin.WrapF(handler.Playground("GraphQL", "/api/v1/query"))
+	return gin.WrapF(handler.Playground("GraphQL", "/api/query"))
 }
