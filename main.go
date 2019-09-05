@@ -17,9 +17,11 @@ func main() {
 		log.Fatalf("load config err: %s", err)
 	}
 	db.Init(AppConf)
+	utils.InitLogger(gin.Mode())
 
 	r := gin.Default()
 	router.InitRouter(r)
+
 	if err := r.Run(); err != nil {
 		log.Fatal(err)
 	}

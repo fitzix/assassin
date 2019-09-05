@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fitzix/assassin/db"
 	"github.com/fitzix/assassin/models"
 )
 
 func (r *queryResolver) AllApps(ctx context.Context, key *string, size *int, num *int, order *models.AppOrderBy) (*models.AppList, error) {
 	var down models.AppList
-	d := db.GetDB()
+	d := r.db
 	if key != nil {
 		d = d.Where("name LIKE ?", fmt.Sprintf("%%%s%%", *key))
 	}
@@ -29,5 +28,10 @@ func (r *queryResolver) AllApps(ctx context.Context, key *string, size *int, num
 }
 
 func (r *queryResolver) App(ctx context.Context, id string) (*models.App, error) {
-	panic("implement me")
+	var down models.App
+	if err := r.db.Find(&down, "id = ?", id).Error; err != nil {
+		r.log.Errorf("db err: %s", err)
+		return nil, r.Fail(3000)
+	}
+	return &down, nil
 }

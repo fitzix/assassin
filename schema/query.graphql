@@ -4,5 +4,5 @@ type Query {
     allTags: [Tag!]!
     allVersions(appId: ID!): [AppVersion!]!
 
-    app(id: ID!): App
+    app(id: ID!): App!
 }

@@ -444,7 +444,7 @@ enum AppOrderBy {
     allTags: [Tag!]!
     allVersions(appId: ID!): [AppVersion!]!
 
-    app(id: ID!): App
+    app(id: ID!): App!
 }`},
 	&ast.Source{Name: "schema/scalar.graphql", Input: `scalar Time`},
 	&ast.Source{Name: "schema/tag.graphql", Input: `type Tag {
@@ -1539,12 +1539,15 @@ func (ec *executionContext) _Query_app(ctx context.Context, field graphql.Collec
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*models.App)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOApp2ᚖgithubᚗcomᚋfitzixᚋassassinᚋmodelsᚐApp(ctx, field.Selections, res)
+	return ec.marshalNApp2ᚖgithubᚗcomᚋfitzixᚋassassinᚋmodelsᚐApp(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3264,6 +3267,9 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_app(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		case "__type":
@@ -3591,6 +3597,16 @@ func (ec *executionContext) marshalNApp2ᚕgithubᚗcomᚋfitzixᚋassassinᚋmo
 	}
 	wg.Wait()
 	return ret
+}
+
+func (ec *executionContext) marshalNApp2ᚖgithubᚗcomᚋfitzixᚋassassinᚋmodelsᚐApp(ctx context.Context, sel ast.SelectionSet, v *models.App) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._App(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNAppList2githubᚗcomᚋfitzixᚋassassinᚋmodelsᚐAppList(ctx context.Context, sel ast.SelectionSet, v models.AppList) graphql.Marshaler {
@@ -4087,17 +4103,6 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) marshalOApp2githubᚗcomᚋfitzixᚋassassinᚋmodelsᚐApp(ctx context.Context, sel ast.SelectionSet, v models.App) graphql.Marshaler {
-	return ec._App(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalOApp2ᚖgithubᚗcomᚋfitzixᚋassassinᚋmodelsᚐApp(ctx context.Context, sel ast.SelectionSet, v *models.App) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._App(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOAppOrderBy2githubᚗcomᚋfitzixᚋassassinᚋmodelsᚐAppOrderBy(ctx context.Context, v interface{}) (models.AppOrderBy, error) {

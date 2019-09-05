@@ -13,6 +13,8 @@ require (
 	github.com/spf13/viper v1.4.0
 	github.com/vektah/gqlparser v1.1.2
 	github.com/ziutek/mymysql v1.5.4 // indirect
+	go.uber.org/zap v1.10.0
 	gopkg.in/gorp.v1 v1.7.2 // indirect
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v2 v2.2.2
 )
