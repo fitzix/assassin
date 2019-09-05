@@ -1,0 +1,34 @@
+type App {
+    id: ID!
+    name: String!
+    description: String!
+    updatedAt: Time!
+}
+
+type AppList {
+    total: Int!
+    apps: [App!]!
+}
+
+input CreateApp {
+    name: String!
+    description: String!
+    tags: [Int!]!
+    category: [Int!]!
+}
+
+input CreateAppVersion {
+    appId: ID!
+    version: String!
+    size: String
+    downloadId: Int!
+    url: String!
+    secret: String
+}
+
+enum AppOrderBy {
+    # 热度
+    HOT
+    # 最新
+    UPDATE_DESC
+}

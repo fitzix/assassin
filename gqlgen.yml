@@ -6,10 +6,12 @@
 schema:
   - schema/*.graphql
 exec:
-  filename: graph/graph.go
+  filename: graph/exec_gen.go
 model:
-  filename: models/graph.go
-resolver:
-  filename: controllers/resolver.go
-  type: Resolver
-autobind: []
+  filename: models/model_gen.go
+#resolver:
+#  filename: controllers/resolver.go
+#  type: Resolver
+autobind:
+  - github.com/fitzix/assassin/models
+

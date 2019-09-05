@@ -2,8 +2,11 @@ package controllers
 
 import (
 	"github.com/99designs/gqlgen/handler"
+	"github.com/fitzix/assassin/consts"
 	"github.com/fitzix/assassin/graph"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
+	"github.com/vektah/gqlparser/gqlerror"
 )
 
 // Defining the Graphql handler
@@ -17,4 +20,23 @@ func GraphqlHandler() gin.HandlerFunc {
 // Defining the Playground handler
 func PlaygroundHandler() gin.HandlerFunc {
 	return gin.WrapF(handler.Playground("GraphQL", "/api/query"))
+}
+
+func (r *queryResolver) Fail(code consts.StatusCode) error {
+	return &gqlerror.Error{
+		Message: consts.StatusText(code),
+		Extensions: map[string]interface{}{
+			"code": code,
+		},
+	}
+}
+
+func (r *queryResolver) Page(query *gorm.DB,size *int, num *int, data interface{}, count interface{}) error {
+	if err := query.Model(data).Count(count).Error; err != nil {
+		return err
+	}
+	if err := query.Limit(*size).Offset(*size * (*num - 1)).Find(data).Error; err != nil {
+		return err
+	}
+	return nil
 }

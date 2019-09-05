@@ -1,25 +1,9 @@
-type Todo {
-    "时代大厦所撒大声地升到是第十三都是"
-    id: ID!
-    text: String!
-    done: Boolean!
-    user: User!
-}
-
-type User {
-    id: ID!
-    name: String!
-}
-
 type Query {
-    todos: [Todo!]!
+    allApps(key: String size: Int = 20 num: Int = 1 order: AppOrderBy = HOT): AppList!
 }
 
-input NewTodo {
-    text: String!
-    userId: String!
-}
+# ------------------------------------------------
 
 type Mutation {
-    createTodo(input: NewTodo!): Todo!
+    login(input: Login!): LoginResp
 }
