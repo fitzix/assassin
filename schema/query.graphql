@@ -1,0 +1,8 @@
+type Query {
+    allApps(key: String size: Int = 20 num: Int = 1 order: AppOrderBy = HOT): AppList!
+    allCategories: [Category!]!
+    allTags: [Tag!]!
+    allVersions(appId: ID): [Version!]!
+
+    app(id: ID): App
+}

@@ -22,7 +22,8 @@ DROP TABLE IF EXISTS "category";
 
 CREATE TABLE "category" (
     "id"   SERIAL PRIMARY KEY,
-    "name" VARCHAR(50) UNIQUE NOT NULL
+    "name" VARCHAR(50) UNIQUE NOT NULL,
+    "icon" VARCHAR(50)        NOT NULL
 );
 
 DROP TABLE IF EXISTS "tag";

@@ -15,6 +15,8 @@ type App struct {
 	AsnModel
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	Hot         int    `json:"hot"`
+	View        int    `json:"view"`
 }
 
 type AppList struct {

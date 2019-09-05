@@ -1,9 +1,0 @@
-type Query {
-    allApps(key: String size: Int = 20 num: Int = 1 order: AppOrderBy = HOT): AppList!
-}
-
-# ------------------------------------------------
-
-type Mutation {
-    login(input: Login!): LoginResp
-}

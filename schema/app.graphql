@@ -3,6 +3,8 @@ type App {
     name: String!
     description: String!
     updatedAt: Time!
+    hot: Int!
+    view: Int!
 }
 
 type AppList {
