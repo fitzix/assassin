@@ -2,9 +2,10 @@ package models
 
 import "time"
 
-type Version struct {
+type AppVersion struct {
 	ID int `gorm:"primary_key"`
 	Name string
+	Size string
 	DownloadId int
 	Url string
 	Secret string

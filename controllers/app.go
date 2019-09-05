@@ -28,6 +28,6 @@ func (r *queryResolver) AllApps(ctx context.Context, key *string, size *int, num
 	return &down, nil
 }
 
-func (r *queryResolver) App(ctx context.Context, id *string) (*models.App, error) {
+func (r *queryResolver) App(ctx context.Context, id string) (*models.App, error) {
 	panic("implement me")
 }

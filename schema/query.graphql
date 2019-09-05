@@ -2,7 +2,7 @@ type Query {
     allApps(key: String size: Int = 20 num: Int = 1 order: AppOrderBy = HOT): AppList!
     allCategories: [Category!]!
     allTags: [Tag!]!
-    allVersions(appId: ID): [Version!]!
+    allVersions(appId: ID!): [AppVersion!]!
 
-    app(id: ID): App
+    app(id: ID!): App
 }

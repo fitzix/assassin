@@ -1,4 +1,4 @@
-type Version {
+type AppVersion {
     id: Int!
     name: String!
     size: String!

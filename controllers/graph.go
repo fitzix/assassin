@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/99designs/gqlgen/handler"
 	"github.com/fitzix/assassin/consts"
+	"github.com/fitzix/assassin/db"
 	"github.com/fitzix/assassin/graph"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
@@ -13,7 +14,7 @@ import (
 func GraphqlHandler() gin.HandlerFunc {
 	// NewExecutableSchema and Config are in the generated.go file
 	// Resolver is in the resolver.go file
-	h := handler.GraphQL(graph.NewExecutableSchema(graph.Config{Resolvers: &Resolver{}}))
+	h := handler.GraphQL(graph.NewExecutableSchema(graph.Config{Resolvers: &Resolver{ db: db.GetDB() }}))
 	return gin.WrapF(h)
 }
 
