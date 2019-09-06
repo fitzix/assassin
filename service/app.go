@@ -2,12 +2,20 @@ package service
 
 import (
 	"net/http"
+	"strconv"
 
+	"github.com/fitzix/assassin/db"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 type AsnGin struct {
-	c *gin.Context
+	C *gin.Context
+	D *gorm.DB
+}
+
+func NewAsnGin(c *gin.Context) *AsnGin {
+	return &AsnGin{C: c, D: db.GetDB() }
 }
 
 type Response struct {
@@ -18,9 +26,9 @@ type Response struct {
 
 // Response setting gin.JSON
 func (a *AsnGin) Response(code AsnStatusCode, data interface{}) {
-	a.c.JSON(http.StatusOK, Response{
+	a.C.JSON(http.StatusOK, Response{
 		Code: code,
-		Msg: AsnStatusText(code),
+		Msg:  AsnStatusText(code),
 		Data: data,
 	})
 	return
@@ -34,4 +42,23 @@ func (a *AsnGin) Success(data interface{}) {
 func (a *AsnGin) Fail(code AsnStatusCode) {
 	a.Response(code, nil)
 	return
+}
+
+func (a *AsnGin) Page(query *gorm.DB, data interface{}, count interface{}) error {
+	size, err := strconv.Atoi(a.C.Query("page_size"))
+	if err != nil {
+		size = 20
+	}
+	num, err := strconv.Atoi(a.C.Query("page_num"))
+	if err != nil {
+		num = 1
+	}
+
+	if err := query.Model(data).Count(count).Error; err != nil {
+		return err
+	}
+	if err := query.Limit(size).Offset(size * (num - 1)).Find(data).Error; err != nil {
+		return err
+	}
+	return nil
 }

@@ -34,7 +34,7 @@ const (
 	StatusWebUserNameExist        = 3603
 )
 
-var statusText = map[StatusCode]string{
+var statusText = map[AsnStatusCode]string{
 	StatusWebBadRequest:          "请求出错",
 	StatusWebOperateErr:          "操作失败",
 	StatusWebParamErr:            "参数错误",
