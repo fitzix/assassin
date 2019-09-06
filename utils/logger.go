@@ -9,7 +9,7 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-var zapLogger *zap.SugaredLogger
+var zapLogger *zap.Logger
 
 func InitLogger(mod string) {
 	hook := lumberjack.Logger{
@@ -33,12 +33,13 @@ func InitLogger(mod string) {
 	if mod == gin.ReleaseMode {
 		core = zapcore.NewCore(encoder, zapcore.AddSync(&hook), zap.InfoLevel)
 	} else {
+		encoder = zapcore.NewConsoleEncoder(encoderConfig)
 		core = zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), zap.InfoLevel)
 	}
 
-	zapLogger = zap.New(core, zap.AddStacktrace(zapcore.ErrorLevel), zap.AddCaller()).Sugar()
+	zapLogger = zap.New(core, zap.AddStacktrace(zapcore.ErrorLevel), zap.AddCaller())
 }
 
-func GetLogger() *zap.SugaredLogger {
+func GetLogger() *zap.Logger {
 	return zapLogger
 }

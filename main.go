@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/fitzix/assassin/db"
+	"github.com/fitzix/assassin/middlewares"
 	"github.com/fitzix/assassin/models"
 	"github.com/fitzix/assassin/router"
 	"github.com/fitzix/assassin/utils"
@@ -19,7 +20,8 @@ func main() {
 	db.Init(AppConf)
 	utils.InitLogger(gin.Mode())
 
-	r := gin.Default()
+	r := gin.New()
+	r.Use(middlewares.Zap(utils.GetLogger()), middlewares.ZapRecovery(utils.GetLogger(), true))
 	router.InitRouter(r)
 
 	if err := r.Run(); err != nil {

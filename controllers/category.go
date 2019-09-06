@@ -7,5 +7,9 @@ import (
 )
 
 func (r *queryResolver) AllCategories(ctx context.Context) ([]*models.Category, error) {
-	panic("implement me")
+	var down []*models.Category
+	if err := r.db.Find(&down).Error; err != nil {
+		return nil, r.Fail(3000)
+	}
+	return down, nil
 }

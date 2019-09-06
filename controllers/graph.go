@@ -15,7 +15,7 @@ import (
 func GraphqlHandler() gin.HandlerFunc {
 	// NewExecutableSchema and Config are in the generated.go file
 	// Resolver is in the resolver.go file
-	h := handler.GraphQL(graph.NewExecutableSchema(graph.Config{Resolvers: &Resolver{db: db.GetDB(), log: utils.GetLogger()}}))
+	h := handler.GraphQL(graph.NewExecutableSchema(graph.Config{Resolvers: &Resolver{db: db.GetDB(), log: utils.GetLogger().Sugar()}}))
 	return gin.WrapF(h)
 }
 
