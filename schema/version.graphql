@@ -1,9 +1,0 @@
-type AppVersion {
-    id: Int!
-    name: String!
-    size: String!
-    downloadId: Int!
-    url: String!
-    secret: String
-    createdAt: Time
-}

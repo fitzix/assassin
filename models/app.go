@@ -14,6 +14,7 @@ type AsnModel struct {
 type App struct {
 	AsnModel
 	Name        string `json:"name"`
+	Icon        string `json:"icon"`
 	Description string `json:"description"`
 	Hot         int    `json:"hot"`
 	View        int    `json:"view"`

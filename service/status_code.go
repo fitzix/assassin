@@ -1,10 +1,10 @@
-package consts
+package service
 
-type StatusCode int
+type AsnStatusCode int
 
 // A-B-CC
 const (
-	// common 00
+	// service 00
 	StatusWebBadRequest          = 3000
 	StatusWebOperateErr          = 3001
 	StatusWebParamErr            = 3002
@@ -63,6 +63,6 @@ var statusText = map[StatusCode]string{
 
 // StatusText returns a text for the HTTP status code. It returns the empty
 // string if the code is unknown.
-func StatusText(code StatusCode) string {
+func AsnStatusText(code AsnStatusCode) string {
 	return statusText[code]
 }

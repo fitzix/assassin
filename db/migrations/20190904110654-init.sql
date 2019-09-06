@@ -38,11 +38,25 @@ DROP TABLE IF EXISTS "app";
 CREATE TABLE "app" (
     "id"          CHAR(16) PRIMARY KEY,
     "name"        VARCHAR(50) UNIQUE NOT NULL,
+    "icon"        VARCHAR(50)        NOT NULL,
+    "carousel"    VARCHAR(100)       NOT NULL,
     "description" TEXT,
     "created_at"  TIMESTAMP          NOT NULL,
     "updated_at"  TIMESTAMP          NOT NULL,
-    "deleted_at"  TIMESTAMP
+    "deleted_at"  TIMESTAMP,
+    "status"      INT2 DEFAULT 0     NOT NULL
 );
+-- Column Comment
+COMMENT ON COLUMN "app"."status" IS '0 正常 1 未发布';
+
+DROP TABLE IF EXISTS "app_carousel";
+
+CREATE TABLE "app_carousel" (
+    "id"     SERIAL PRIMARY KEY,
+    "app_id" CHAR(16)    NOT NULL,
+    "url"    VARCHAR(50) NOT NULL
+);
+
 
 DROP TABLE IF EXISTS "app_tag";
 

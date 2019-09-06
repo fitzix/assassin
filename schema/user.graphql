@@ -1,9 +1,0 @@
-type LoginResp {
-    token: String!
-}
-
-input Login {
-    userName: String!
-    password: String!
-}
-
