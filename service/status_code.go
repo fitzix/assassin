@@ -4,6 +4,7 @@ type AsnStatusCode int
 
 // A-B-CC
 const (
+	StatusSuccess = 0
 	// service 00
 	StatusWebBadRequest          = 3000
 	StatusWebOperateErr          = 3001
@@ -35,6 +36,7 @@ const (
 )
 
 var statusText = map[AsnStatusCode]string{
+	StatusSuccess:                "ok",
 	StatusWebBadRequest:          "请求出错",
 	StatusWebOperateErr:          "操作失败",
 	StatusWebParamErr:            "参数错误",

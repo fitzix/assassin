@@ -1,4 +1,4 @@
-package utils
+package encrypt
 
 import "github.com/matoous/go-nanoid"
 

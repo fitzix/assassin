@@ -2,41 +2,61 @@ package models
 
 import (
 	"time"
+
+	"github.com/fitzix/assassin/utils/encrypt"
+	"github.com/jinzhu/gorm"
 )
 
 type AsnModel struct {
-	ID        string `gorm:"primary_key" json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        string     `json:"id"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
 	DeletedAt *time.Time `sql:"index" json:"-"`
 }
 
 type App struct {
-	AsnModel
-	Name        string `json:"name"`
-	Icon        string `json:"icon"`
-	Description string `json:"description"`
-	Hot         int    `json:"hot"`
-	View        int    `json:"view"`
+	ID          string        `json:"id"`
+	Name        string        `json:"name"`
+	Type        int           `json:"type"`
+	Icon        string        `json:"icon"`
+	Description string        `json:"description"`
+	Status      bool          `json:"status"`
+	View        int           `json:"view"`
+	Hot         int           `json:"hot"`
+	Carousels   []AppCarousel `json:"carousels"`
+	Versions    []AppVersion  `json:"versions"`
+	CreatedAt   time.Time     `json:"-"`
+	UpdatedAt   time.Time     `json:"-"`
+	DeletedAt   *time.Time    `json:"-"`
 }
 
-type AppList struct {
-	Total int   `json:"total"`
-	Apps  []App `json:"apps"`
-}
-
-type CreateApp struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Tags        []int  `json:"tags"`
-	Category    []int  `json:"category"`
+type AppCarousel struct {
+	ID    uint   `json:"id"`
+	AppId string `json:"appId"`
+	Url   string `json:"url"`
 }
 
 type CreateAppVersion struct {
-	AppID      string `json:"appId"`
-	Version    string `json:"version"`
-	Size       string `json:"size"`
-	DownloadID int    `json:"downloadId"`
-	URL        string `json:"url"`
-	Secret     string `json:"secret"`
+	AppID      string
+	Version    string
+	Size       string
+	DownloadID int
+	URL        string
+	Secret     string
+}
+
+// hook
+func (a *App) BeforeCreate(scope *gorm.Scope) error {
+	return scope.SetColumn("ID", encrypt.GetNanoId())
+}
+
+func (a *App) CouldUpdateColumns() []interface{} {
+	return []interface{}{
+		"name",
+		"type",
+		"icon",
+		"description",
+		"status",
+		"update_at",
+	}
 }

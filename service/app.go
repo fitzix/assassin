@@ -5,43 +5,50 @@ import (
 	"strconv"
 
 	"github.com/fitzix/assassin/db"
+	"github.com/fitzix/assassin/models"
+	"github.com/fitzix/assassin/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	"go.uber.org/zap"
 )
 
 type AsnGin struct {
 	C *gin.Context
 	D *gorm.DB
+	L *zap.SugaredLogger
 }
 
 func NewAsnGin(c *gin.Context) *AsnGin {
-	return &AsnGin{C: c, D: db.GetDB() }
-}
-
-type Response struct {
-	Code AsnStatusCode `json:"code"`
-	Msg  string        `json:"msg"`
-	Data interface{}   `json:"data"`
+	return &AsnGin{
+		C: c,
+		D: db.GetDB(),
+		L: utils.GetLogger().Sugar(),
+	}
 }
 
 // Response setting gin.JSON
 func (a *AsnGin) Response(code AsnStatusCode, data interface{}) {
-	a.C.JSON(http.StatusOK, Response{
-		Code: code,
+	a.C.JSON(http.StatusOK, models.Response{
+		Code: int(code),
 		Msg:  AsnStatusText(code),
 		Data: data,
 	})
-	return
 }
 
 func (a *AsnGin) Success(data interface{}) {
 	a.Response(0, data)
-	return
 }
 
-func (a *AsnGin) Fail(code AsnStatusCode) {
+func (a *AsnGin) SuccessWithPage(total int, data interface{}) {
+	a.Success(models.PageDown{
+		Total: total,
+		Info:  data,
+	})
+}
+
+func (a *AsnGin) Fail(code AsnStatusCode, err error) {
+	a.L.Errorf("response err, code: %d, err: %s", code, err)
 	a.Response(code, nil)
-	return
 }
 
 func (a *AsnGin) Page(query *gorm.DB, data interface{}, count interface{}) error {
