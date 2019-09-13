@@ -11,7 +11,7 @@ import (
 
 var zapLogger *zap.Logger
 
-func InitLogger(mod string) {
+func InitLogger() {
 	hook := lumberjack.Logger{
 		Filename: "logs/app.log",
 		// 每个日志文件保存的最大尺寸 单位：M
@@ -30,7 +30,7 @@ func InitLogger(mod string) {
 
 	var core zapcore.Core
 
-	if mod == gin.ReleaseMode {
+	if gin.Mode() == gin.ReleaseMode {
 		core = zapcore.NewCore(encoder, zapcore.AddSync(&hook), zap.InfoLevel)
 	} else {
 		encoder = zapcore.NewConsoleEncoder(encoderConfig)

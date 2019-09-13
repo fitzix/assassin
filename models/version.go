@@ -3,14 +3,14 @@ package models
 import "time"
 
 type AppVersion struct {
-	ID         int
-	Name       string
-	AppId      string
-	Size       string
-	DownloadId int
-	Url        string
-	Secret     string
-	CreatedAt  time.Time
+	ID         int       `json:"id"`
+	Name       string    `json:"name" binding:"required"`
+	AppId      string    `json:"appId"`
+	Size       string    `json:"size"`
+	DownloadId int       `json:"downloadId" binding:"required"`
+	Url        string    `json:"url"`
+	Secret     string    `json:"secret"`
+	CreatedAt  time.Time `json:"createdAt"`
 }
 
 type Download struct {

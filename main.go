@@ -5,23 +5,27 @@ import (
 
 	"github.com/fitzix/assassin/db"
 	"github.com/fitzix/assassin/middlewares"
-	"github.com/fitzix/assassin/models"
 	"github.com/fitzix/assassin/router"
 	"github.com/fitzix/assassin/utils"
+	"github.com/fitzix/assassin/utils/github"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
-var AppConf models.Config
+func init() {
+	utils.InitConf()
+	db.Init()
+	utils.InitLogger()
+	github.InitGithubClient()
+}
 
 func main() {
-	if err := utils.LoadConfig(&AppConf); err != nil {
-		log.Fatalf("load config err: %s", err)
-	}
-	db.Init(AppConf)
-	utils.InitLogger(gin.Mode())
-
 	r := gin.New()
-	r.Use(middlewares.Zap(utils.GetLogger()), middlewares.ZapRecovery(utils.GetLogger(), true))
+
+	r.Use(cors.Default())
+	r.Use(middlewares.Zap(utils.GetLogger()))
+	r.Use(middlewares.ZapRecovery(utils.GetLogger(), true))
+
 	router.InitRouter(r)
 
 	if err := r.Run(); err != nil {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/fitzix/assassin/models"
+	"github.com/fitzix/assassin/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
@@ -13,7 +13,9 @@ import (
 
 var db *gorm.DB
 
-func Init(conf models.Config) {
+func Init() {
+	conf := utils.GetConf()
+
 	var err error
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", conf.Db.Host, conf.Db.Port, conf.Db.User, conf.Db.Password, conf.Db.Dbname)
 	db, err = gorm.Open("postgres", connStr)

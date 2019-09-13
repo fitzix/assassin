@@ -9,28 +9,50 @@ import (
 func InitRouter(r *gin.Engine) {
 	v1 := r.Group("/api/v1")
 
+
+
+	// =================需要登录==================
 	authGroup := v1.Group("")
 	authGroup.Use(middlewares.Jwt(""))
 
-	publicGroup := v1.Group("")
-
-	// ===================================
-
+	// app
 	authGroup.POST("/apps", controllers.AppCreate)
 	authGroup.PUT("/apps/:id", controllers.AppUpdate)
 
+	authGroup.PUT("/apps/:id/tags", controllers.AppTagsCreateOrUpdate)
+	// version
+	authGroup.POST("/apps/:id/version", controllers.VersionCreate)
+	authGroup.PUT("/apps/:id/version/:versionId", controllers.VersionUpdate)
+	// carousel
+	authGroup.POST("/apps/:id/carousels", controllers.CarouselCreate)
+	authGroup.DELETE("/apps/:id/carousels/:cid", controllers.CarouselDelete)
+
+	// tag
 	authGroup.POST("/tags", controllers.TagCreate)
 	authGroup.PUT("/tags/:id", controllers.TagUpdate)
+	// upload
+	authGroup.POST("/upload", controllers.Upload)
 
-	// ===================================
 
-	publicGroup.GET("/apps", controllers.AppGetAll)
+
+
+	// ================公开接口===================
+	publicGroup := v1.Group("")
+
+	// app
+	publicGroup.GET("/apps", controllers.AppList)
 	publicGroup.GET("/apps/:id", controllers.AppIndex)
-
-	publicGroup.GET("/tags", controllers.TagAll)
+	publicGroup.GET("/apps/:id/tags", controllers.AppTags)
+	
+	// version
+	publicGroup.GET("/apps/:id/versions", controllers.AppVersion)
+	// carousel
+	publicGroup.GET("/apps/:id/carousels", controllers.CarouseList)
+	// tag
+	publicGroup.GET("/tags", controllers.TagList)
 	publicGroup.GET("/tags/:id", controllers.TagIndex)
-
-	publicGroup.GET("/versions", controllers.TagAll)
-
-	publicGroup.GET("/categories", controllers.CategoryAll)
+	// version
+	publicGroup.GET("/versions", controllers.TagList)
+	// categories
+	publicGroup.GET("/categories", controllers.CategoryList)
 }

@@ -12,7 +12,7 @@ import (
 // 	return down, nil
 // }
 
-func CategoryAll(c *gin.Context) {}
+func CategoryList(c *gin.Context) {}
 func CategoryIndex(c *gin.Context) {}
 func CategoryUpdate(c *gin.Context) {}
 func CategoryCreate(c *gin.Context) {}

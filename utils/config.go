@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"log"
 	"strings"
 
 	"github.com/fitzix/assassin/models"
@@ -9,20 +10,22 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func LoadConfig(config *models.Config) error {
+var appConf models.Config
+
+func InitConf() {
 	v := viper.New()
 	v.SetConfigType("yaml")
 	b, err := yaml.Marshal(models.NewConfig())
 	if err != nil {
-		return err
+		log.Fatalf("maeshal default err: %s", err)
 	}
 	if err := v.MergeConfig(bytes.NewReader(b)); err != nil {
-		return err
+		log.Fatalf("merge default err: %s", err)
 	}
 	v.SetConfigFile("config.yml")
 	if err := v.MergeInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigParseError); ok {
-			return err
+			log.Fatalf("merge default err: %s", err)
 		}
 		// dont return error if file is missing. overwrite file is optional
 	}
@@ -31,5 +34,12 @@ func LoadConfig(config *models.Config) error {
 	v.SetEnvPrefix("ASN")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
-	return v.Unmarshal(config)
+	if err := v.Unmarshal(&appConf); err != nil {
+		log.Fatalf("unmarshal default err: %s", err)
+	}
+}
+
+
+func GetConf() models.Config {
+	return appConf
 }

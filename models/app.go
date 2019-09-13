@@ -15,19 +15,17 @@ type AsnModel struct {
 }
 
 type App struct {
-	ID          string        `json:"id"`
-	Name        string        `json:"name"`
-	Type        int           `json:"type"`
-	Icon        string        `json:"icon"`
-	Description string        `json:"description"`
-	Status      bool          `json:"status"`
-	View        int           `json:"view"`
-	Hot         int           `json:"hot"`
-	Carousels   []AppCarousel `json:"carousels"`
-	Versions    []AppVersion  `json:"versions"`
-	CreatedAt   time.Time     `json:"-"`
-	UpdatedAt   time.Time     `json:"-"`
-	DeletedAt   *time.Time    `json:"-"`
+	ID          string     `json:"id"`
+	Name        string     `json:"name"`
+	Type        int        `json:"type"`
+	Icon        string     `json:"icon"`
+	Description string     `json:"description"`
+	Status      bool       `json:"status"`
+	View        int        `json:"view"`
+	Hot         int        `json:"hot"`
+	CreatedAt   time.Time  `json:"-"`
+	UpdatedAt   time.Time  `json:"-"`
+	DeletedAt   *time.Time `json:"-"`
 }
 
 type AppCarousel struct {
@@ -36,13 +34,10 @@ type AppCarousel struct {
 	Url   string `json:"url"`
 }
 
-type CreateAppVersion struct {
-	AppID      string
-	Version    string
-	Size       string
-	DownloadID int
-	URL        string
-	Secret     string
+type AppTag struct {
+	ID    uint
+	AppId string
+	TagId uint
 }
 
 // hook

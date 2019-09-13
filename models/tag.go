@@ -1,6 +1,6 @@
 package models
 
 type Tag struct {
-	ID   int    `json:"id" gorm:"primary_key"`
-	Name string `json:"name"`
+	ID   int    `json:"id"`
+	Name string `json:"name" binding:"required"`
 }
