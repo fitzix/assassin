@@ -5,16 +5,17 @@ import (
 
 	"github.com/fitzix/assassin/models"
 	"github.com/fitzix/assassin/service"
+	"github.com/fitzix/assassin/service/model"
+	"github.com/fitzix/assassin/utils/encrypt"
 	"github.com/gin-gonic/gin"
-	gormbulk "github.com/t-tiger/gorm-bulk-insert"
+	"github.com/t-tiger/gorm-bulk-insert"
 )
 
 func AppList(c *gin.Context) {
 	a := service.NewAsnGin(c)
-	var down []models.App
+	var down []model.App
 	var total int
-
-	db := a.D.Select("app.*, app_hot.*").Joins("LEFT JOIN app_hot ON app.id = app_hot.app_id").Where("app.status", true)
+	db := a.D.Select("app.*, app_hot.*").Joins("LEFT JOIN app_hot ON app.id = app_hot.app_id").Where("app.status = ?", true)
 	if k := c.Query("key"); k != "" {
 		db = db.Where("name LIKE ?", fmt.Sprintf("%%%s%%", k))
 	}
@@ -22,14 +23,10 @@ func AppList(c *gin.Context) {
 	if order := c.Query("order"); order == "hot" {
 		db = db.Order("app_hot.hot DESC")
 	} else {
-		db = db.Order("app.updated_at DESC")
+		db = db.Order("app.version_at DESC")
 	}
 
-	if appType := c.Query("type"); appType == "app" {
-		db = db.Where("type = ?", 1)
-	} else {
-		db = db.Where("type = ?", 0)
-	}
+	db = db.Where("type = ?", service.AsnAppType(c.Query("type")))
 
 	if err := a.Page(db, &down, &total); err != nil {
 		a.Fail(service.StatusWebBadRequest, nil)
@@ -40,9 +37,9 @@ func AppList(c *gin.Context) {
 
 func AppIndex(c *gin.Context) {
 	a := service.NewAsnGin(c)
-	var down models.App
+	var down model.App
 
-	if err := a.D.Select("app.*, app_hot.*").Joins("LEFT JOIN app_hot ON app.id = app_hot.app_id").Where("app.status", true).Find(&down, "app.id = ?", c.Param("id")).Error; err != nil {
+	if err := a.D.Select("app.*, app_hot.*").Preload("Versions").Preload("Carousels").Preload("Tags").Joins("LEFT JOIN app_hot ON app.id = app_hot.app_id").Where("app.status = ?", true).Find(&down, "app.id = ?", c.Param("id")).Error; err != nil {
 		a.L.Errorf("err %s", err)
 		a.Fail(service.StatusWebBadRequest, nil)
 		return
@@ -57,6 +54,8 @@ func AppCreate(c *gin.Context) {
 		a.Fail(service.StatusWebParamErr, err)
 		return
 	}
+
+	up.ID = encrypt.GetNanoId()
 
 	if err := a.D.Omit("View", "Hot").Create(&up).Error; err != nil {
 		a.Fail(service.StatusWebBadRequest, err)
@@ -74,7 +73,7 @@ func AppUpdate(c *gin.Context) {
 		a.Fail(service.StatusWebParamErr, err)
 		return
 	}
-	if err :=a.D.Model(&up).Select("", up.CouldUpdateColumns()...).Updates(up).Error; err != nil {
+	if err := a.D.Model(&up).Select("", up.CouldUpdateColumns()...).Updates(up).Error; err != nil {
 		a.Fail(service.StatusWebBadRequest, err)
 		return
 	}

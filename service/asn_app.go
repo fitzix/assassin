@@ -6,6 +6,7 @@ import (
 
 	"github.com/fitzix/assassin/db"
 	"github.com/fitzix/assassin/models"
+	"github.com/fitzix/assassin/service/model"
 	"github.com/fitzix/assassin/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
@@ -68,4 +69,9 @@ func (a *AsnGin) Page(query *gorm.DB, data interface{}, count interface{}) error
 		return err
 	}
 	return nil
+}
+
+func (a *AsnGin) GetToken() model.Token {
+	token, _ := a.C.Get("token")
+	return *token.(*model.Token)
 }

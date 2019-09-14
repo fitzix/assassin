@@ -1,10 +1,10 @@
 package models
 
-type Login struct {
-	UserName string `json:"userName"`
-	Password string `json:"password"`
-}
-
-type LoginResp struct {
-	Token string `json:"token"`
+type User struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Password string `json:"-"`
+	Email    string `json:"email"`
+	RoleId   int    `json:"roleId"`
+	Code     uint   `json:"-"`
 }

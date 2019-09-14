@@ -13,7 +13,10 @@ func InitRouter(r *gin.Engine) {
 
 	// =================需要登录==================
 	authGroup := v1.Group("")
-	authGroup.Use(middlewares.Jwt(""))
+	authGroup.Use(middlewares.Jwt())
+
+	// user
+	authGroup.POST("/users", controllers.UserCreate)
 
 	// app
 	authGroup.POST("/apps", controllers.AppCreate)
@@ -39,20 +42,15 @@ func InitRouter(r *gin.Engine) {
 	// ================公开接口===================
 	publicGroup := v1.Group("")
 
+	// user
+	publicGroup.POST("/users/login", controllers.UserLogin)
+
 	// app
 	publicGroup.GET("/apps", controllers.AppList)
 	publicGroup.GET("/apps/:id", controllers.AppIndex)
-	publicGroup.GET("/apps/:id/tags", controllers.AppTags)
-	
-	// version
-	publicGroup.GET("/apps/:id/versions", controllers.AppVersion)
-	// carousel
-	publicGroup.GET("/apps/:id/carousels", controllers.CarouseList)
+
 	// tag
 	publicGroup.GET("/tags", controllers.TagList)
-	publicGroup.GET("/tags/:id", controllers.TagIndex)
-	// version
-	publicGroup.GET("/versions", controllers.TagList)
 	// categories
 	publicGroup.GET("/categories", controllers.CategoryList)
 }

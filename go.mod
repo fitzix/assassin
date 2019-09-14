@@ -25,6 +25,7 @@ require (
 	github.com/ugorji/go v1.1.7 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.uber.org/zap v1.10.0
+	golang.org/x/crypto v0.0.0-20190911031432-227b76d455e7
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	gopkg.in/go-playground/validator.v9 v9.29.1 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect

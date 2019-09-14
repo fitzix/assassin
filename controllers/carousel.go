@@ -4,7 +4,7 @@ import (
 	"github.com/fitzix/assassin/models"
 	"github.com/fitzix/assassin/service"
 	"github.com/gin-gonic/gin"
-	gormbulk "github.com/t-tiger/gorm-bulk-insert"
+	"github.com/t-tiger/gorm-bulk-insert"
 )
 
 func CarouseList(c *gin.Context) {

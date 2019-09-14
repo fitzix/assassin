@@ -6,14 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// func (r *queryResolver) AllTags(ctx context.Context) ([]*models.Tag, error) {
-// 	var down []*models.Tag
-// 	if err := r.db.Find(&down).Error; err != nil {
-// 		return nil, r.Fail(3000)
-// 	}
-// 	return down, nil
-// }
-
 func TagList(c *gin.Context) {
 	a := service.NewAsnGin(c)
 	var down []models.Tag
@@ -23,16 +15,18 @@ func TagList(c *gin.Context) {
 	}
 	a.Success(down)
 }
-func TagIndex(c *gin.Context) {}
+func TagIndex(c *gin.Context) {
+
+}
 func TagCreate(c *gin.Context) {
 	a := service.NewAsnGin(c)
 	var up models.Tag
-	if err :=c.ShouldBindJSON(&up); err != nil {
+	if err := c.ShouldBindJSON(&up); err != nil {
 		a.Fail(service.StatusWebParamErr, err)
 		return
 	}
 
-	if err :=a.D.Create(&up).Error; err != nil {
+	if err := a.D.Create(&up).Error; err != nil {
 		a.Fail(service.StatusWebBadRequest, err)
 		return
 	}
