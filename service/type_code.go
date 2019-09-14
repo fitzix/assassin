@@ -3,6 +3,9 @@ package service
 const (
 	AsnAppTypeApp = iota
 	AsnAppTypeBook
+
+	AsnUploadTypeApp = iota
+	AsnUploadTypeArticle
 )
 
 var appTypeName = map[string]int{

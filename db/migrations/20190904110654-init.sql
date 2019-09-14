@@ -6,11 +6,10 @@ REVOKE ALL PRIVILEGES ON DATABASE "assassin" FROM PUBLIC;
 DROP TABLE IF EXISTS "user";
 CREATE TABLE "user" (
     "id"       CHAR(16) PRIMARY KEY,
-    "name"     VARCHAR(50) UNIQUE  NOT NULL,
-    "password" CHAR(32)            NOT NULL,
-    "email"    VARCHAR(300) UNIQUE NOT NULL,
-    "role_id"  INT                 NOT NULL,
-    "code"     INT DEFAULT 0       NOT NULL
+    "name"     VARCHAR(50) UNIQUE NOT NULL,
+    "password" CHAR(32)           NOT NULL,
+    "role_id"  INT                NOT NULL,
+    "code"     INT DEFAULT 0      NOT NULL
 );
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -42,16 +41,16 @@ CREATE TABLE "tag" (
 
 DROP TABLE IF EXISTS "app";
 CREATE TABLE "app" (
-    "id"          CHAR(16) PRIMARY KEY,
-    "name"        VARCHAR(50)             NOT NULL,
-    "type"        INT2      DEFAULT 0     NOT NULL,
-    "icon"        VARCHAR(100)            NOT NULL,
-    "description" TEXT,
-    "created_at"  TIMESTAMP               NOT NULL,
-    "updated_at"  TIMESTAMP               NOT NULL,
-    "version_at"  TIMESTAMP DEFAULT NOW() NOT NULL,
-    "deleted_at"  TIMESTAMP,
-    "status"      BOOL      DEFAULT TRUE  NOT NULL
+    "id"         CHAR(16) PRIMARY KEY,
+    "name"       VARCHAR(50)             NOT NULL,
+    "type"       INT2      DEFAULT 0     NOT NULL,
+    "icon"       VARCHAR(100)            NOT NULL,
+    "title"      VARCHAR(200),
+    "created_at" TIMESTAMP               NOT NULL,
+    "updated_at" TIMESTAMP               NOT NULL,
+    "version_at" TIMESTAMP DEFAULT NOW() NOT NULL,
+    "deleted_at" TIMESTAMP,
+    "status"     BOOL      DEFAULT TRUE  NOT NULL
 );
 CREATE INDEX ON "app" ("type", "status", "deleted_at");
 

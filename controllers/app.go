@@ -7,7 +7,9 @@ import (
 	"github.com/fitzix/assassin/service"
 	"github.com/fitzix/assassin/service/model"
 	"github.com/fitzix/assassin/utils/encrypt"
+	"github.com/fitzix/assassin/utils/github"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	"github.com/t-tiger/gorm-bulk-insert"
 )
 
@@ -39,7 +41,9 @@ func AppIndex(c *gin.Context) {
 	a := service.NewAsnGin(c)
 	var down model.App
 
-	if err := a.D.Select("app.*, app_hot.*").Preload("Versions").Preload("Carousels").Preload("Tags").Joins("LEFT JOIN app_hot ON app.id = app_hot.app_id").Where("app.status = ?", true).Find(&down, "app.id = ?", c.Param("id")).Error; err != nil {
+	if err := a.D.Select("app.*, app_hot.*").Preload("Versions", func(db *gorm.DB) *gorm.DB {
+		return db.Order("created_at DESC")
+	}).Preload("Carousels").Preload("Tags").Joins("LEFT JOIN app_hot ON app.id = app_hot.app_id").Where("app.status = ?", true).Find(&down, "app.id = ?", c.Param("id")).Error; err != nil {
 		a.L.Errorf("err %s", err)
 		a.Fail(service.StatusWebBadRequest, nil)
 		return
@@ -61,6 +65,11 @@ func AppCreate(c *gin.Context) {
 		a.Fail(service.StatusWebBadRequest, err)
 		return
 	}
+
+	// create desc file to github
+	go func(id string) {
+		_, _ = github.GetGithubClient().CreateMdFile(id, service.AsnUploadTypeApp)
+	}(up.ID)
 
 	a.Success(up)
 }

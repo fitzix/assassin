@@ -21,7 +21,7 @@ func UserLogin(c *gin.Context) {
 	}
 	var user models.User
 	encPwd := encrypt.PassEncrypt(up.Password)
-	if err := a.D.Find(&user, "username = ? AND password = ?", up.UserName, encPwd).Error; err != nil {
+	if err := a.D.Find(&user, "name = ? AND password = ?", up.UserName, encPwd).Error; err != nil {
 		a.Fail(service.StatusWebAuthWrongPwd, err)
 		return
 	}

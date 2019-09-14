@@ -26,13 +26,13 @@ func GenJwt(t model.Token) (string, error) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(conf.Jwt.Secret)
+	return token.SignedString([]byte(conf.Jwt.Secret))
 }
 
 func ParseToken(tokenString string) (*model.Token, error) {
 	secret := utils.GetConf().Jwt.Secret
 	token, err := jwt.ParseWithClaims(tokenString, &asnJwtClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return secret, nil
+		return []byte(secret), nil
 	})
 	if err != nil {
 		return nil, service.ErrInvalidToken

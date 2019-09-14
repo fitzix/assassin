@@ -18,12 +18,14 @@ func NewConfig() *Config {
 			Dbname:   "assassin",
 		},
 		Github: Github{
-			Owner:      "asins-xyz",
-			Repo:       "assassin",
-			Token:      "e89ebc4f50935201c88349726c6709f8a2e09e85",
-			Branch:     "master",
-			FilePath:   "post/img",
-			GithubPath: "https://raw.githubusercontent.com",
+			GithubServer: "https://raw.githubusercontent.com",
+			Owner:        "asins-xyz",
+			Repo:         "assassin",
+			Token:        "e89ebc4f50935201c88349726c6709f8a2e09e85",
+			Branch:       "master",
+			ImgPath:      "post/img",
+			ArticlePath:  "post/article",
+			AppDescPath:  "post/app",
 		},
 		Jwt: Jwt{
 			Issuer:  "asn.xyz",
@@ -42,12 +44,14 @@ type Db struct {
 }
 
 type Github struct {
-	Owner      string
-	Repo       string
-	Token      string
-	Branch     string
-	FilePath   string
-	GithubPath string
+	GithubServer string
+	Owner        string
+	Repo         string
+	Branch       string
+	ImgPath      string
+	ArticlePath  string
+	AppDescPath  string
+	Token        string
 }
 
 type Jwt struct {

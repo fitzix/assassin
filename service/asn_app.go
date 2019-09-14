@@ -48,7 +48,7 @@ func (a *AsnGin) SuccessWithPage(total int, data interface{}) {
 }
 
 func (a *AsnGin) Fail(code AsnStatusCode, err error) {
-	a.L.Errorf("response err, code: %d, err: %s", code, err)
+	a.L.Warnf("response err, code: %d, err: %s", code, err)
 	a.Response(code, nil)
 }
 

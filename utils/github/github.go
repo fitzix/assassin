@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/fitzix/assassin/models"
+	"github.com/fitzix/assassin/service"
 	"github.com/fitzix/assassin/utils"
 	"github.com/fitzix/assassin/utils/encrypt"
 	"github.com/google/go-github/v28/github"
@@ -38,15 +39,14 @@ func InitGithubClient() {
 	}
 }
 
-func (c *githubClient) UploadToGithub(content []byte, ext string) (string, error) {
-	fileName := encrypt.GetNanoId() + ext
+func (c *githubClient) UploadToGithub(fileName, filePath string, content []byte) (string, error) {
 	opts := &github.RepositoryContentFileOptions{
 		Message: github.String("upload file by asins.xyz"),
 		Content: content,
 		Branch:  github.String(c.Branch),
 		// Committer: &github.CommitAuthor{Name: github.String("FirstName LastName"), Email: github.String("user@example.com")},
 	}
-	_, _, err := c.client.Repositories.CreateFile(c.ctx, c.Owner, c.Repo, path.Join(c.FilePath, fileName), opts)
+	_, _, err := c.client.Repositories.CreateFile(c.ctx, c.Owner, c.Repo, path.Join(filePath, fileName), opts)
 	if err != nil {
 		return "", err
 	}
@@ -61,14 +61,30 @@ func (c *githubClient) UploadFromFileHeader(file *multipart.FileHeader) (string,
 	}
 	defer src.Close()
 
-	ret, err := ioutil.ReadAll(src)
+	fileByte, err := ioutil.ReadAll(src)
 	if err != nil {
 		return "", err
 	}
 
-	ext := filepath.Ext(file.Filename)
+	fileName := encrypt.GetNanoId() + filepath.Ext(file.Filename)
 
-	return c.UploadToGithub(ret, ext)
+	return c.UploadToGithub(fileName, c.ImgPath, fileByte)
+}
+
+func (c *githubClient) CreateMdFile(fileName string, uploadType int) (string, error) {
+	filePath := c.AppDescPath
+	if uploadType == service.AsnUploadTypeArticle {
+		filePath = c.ArticlePath
+	}
+	fileByte := service.GetTmplContent(uploadType)
+
+	name, err := c.UploadToGithub(fileName+".md", filePath, fileByte)
+
+	if err != nil {
+		utils.GetLogger().Sugar().Warnf("upload md file to github err: %s", err)
+	}
+
+	return name, err
 }
 
 func GetGithubClient() *githubClient {

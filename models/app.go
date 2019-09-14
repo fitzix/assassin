@@ -12,16 +12,16 @@ type AsnModel struct {
 }
 
 type App struct {
-	ID          string     `json:"id"`
-	Name        string     `json:"name"`
-	Type        int        `json:"type"`
-	Icon        string     `json:"icon"`
-	Description string     `json:"description"`
-	Status      bool       `json:"status"`
-	CreatedAt   time.Time  `json:"-"`
-	UpdatedAt   time.Time  `json:"-"`
-	DeletedAt   *time.Time `json:"-"`
-	VersionAt   time.Time  `json:"versionAt"`
+	ID        string     `json:"id"`
+	Name      string     `json:"name"`
+	Type      int        `json:"type"`
+	Icon      string     `json:"icon"`
+	Title     string     `json:"title"`
+	Status    bool       `json:"status"`
+	CreatedAt time.Time  `json:"-"`
+	UpdatedAt time.Time  `json:"-"`
+	DeletedAt *time.Time `json:"-"`
+	VersionAt time.Time  `json:"versionAt"`
 }
 
 type AppCarousel struct {

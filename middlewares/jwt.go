@@ -12,15 +12,18 @@ import (
 // TODO check token code
 func Jwt() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenString := strings.Trim(c.GetHeader("Authorization"), "Bear ")
-		token, err := encrypt.ParseToken(tokenString)
+		tokenSlice := strings.Split(c.GetHeader("Authorization"), " ")
+		if len(tokenSlice) < 2 {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+		token, err := encrypt.ParseToken(tokenSlice[1])
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, models.Response{
+			c.AbortWithStatusJSON(http.StatusUnauthorized, models.Response{
 				Code: http.StatusUnauthorized,
 				Msg:  http.StatusText(http.StatusUnauthorized),
 				Data: nil,
 			})
-			c.Abort()
 			return
 		}
 		c.Set("token", token)
