@@ -4,10 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/fitzix/assassin/db"
 	"github.com/fitzix/assassin/models"
-	"github.com/fitzix/assassin/service/model"
-	"github.com/fitzix/assassin/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"go.uber.org/zap"
@@ -22,8 +19,8 @@ type AsnGin struct {
 func NewAsnGin(c *gin.Context) *AsnGin {
 	return &AsnGin{
 		C: c,
-		D: db.GetDB(),
-		L: utils.GetLogger().Sugar(),
+		D: dbInstance,
+		L: zapLogger.Sugar(),
 	}
 }
 
@@ -71,7 +68,7 @@ func (a *AsnGin) Page(query *gorm.DB, data interface{}, count interface{}) error
 	return nil
 }
 
-func (a *AsnGin) GetToken() model.Token {
+func (a *AsnGin) GetToken() Token {
 	token, _ := a.C.Get("token")
-	return *token.(*model.Token)
+	return *token.(*Token)
 }

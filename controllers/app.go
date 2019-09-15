@@ -5,9 +5,7 @@ import (
 
 	"github.com/fitzix/assassin/models"
 	"github.com/fitzix/assassin/service"
-	"github.com/fitzix/assassin/service/model"
 	"github.com/fitzix/assassin/utils/encrypt"
-	"github.com/fitzix/assassin/utils/github"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"github.com/t-tiger/gorm-bulk-insert"
@@ -15,20 +13,22 @@ import (
 
 func AppList(c *gin.Context) {
 	a := service.NewAsnGin(c)
-	var down []model.App
+	var down []service.App
 	var total int
 	db := a.D.Select("app.*, app_hot.*").Joins("LEFT JOIN app_hot ON app.id = app_hot.app_id").Where("app.status = ?", true)
 	if k := c.Query("key"); k != "" {
 		db = db.Where("name LIKE ?", fmt.Sprintf("%%%s%%", k))
 	}
 
-	if order := c.Query("order"); order == "hot" {
+	if orderType := service.AsnType(c.Query("order")); orderType > 0 {
 		db = db.Order("app_hot.hot DESC")
 	} else {
 		db = db.Order("app.version_at DESC")
 	}
 
-	db = db.Where("type = ?", service.AsnAppType(c.Query("type")))
+	if listType := service.AsnType(c.Query("type")); listType > -1 {
+		db = db.Where("type = ?", listType)
+	}
 
 	if err := a.Page(db, &down, &total); err != nil {
 		a.Fail(service.StatusWebBadRequest, nil)
@@ -39,11 +39,11 @@ func AppList(c *gin.Context) {
 
 func AppIndex(c *gin.Context) {
 	a := service.NewAsnGin(c)
-	var down model.App
+	var down service.App
 
 	if err := a.D.Select("app.*, app_hot.*").Preload("Versions", func(db *gorm.DB) *gorm.DB {
 		return db.Order("created_at DESC")
-	}).Preload("Carousels").Preload("Tags").Joins("LEFT JOIN app_hot ON app.id = app_hot.app_id").Where("app.status = ?", true).Find(&down, "app.id = ?", c.Param("id")).Error; err != nil {
+	}).Preload("Versions.AppVersionDownloads").Preload("Carousels").Preload("Tags").Joins("LEFT JOIN app_hot ON app.id = app_hot.app_id").Where("app.status = ?", true).Find(&down, "app.id = ?", c.Param("id")).Error; err != nil {
 		a.L.Errorf("err %s", err)
 		a.Fail(service.StatusWebBadRequest, nil)
 		return
@@ -68,7 +68,7 @@ func AppCreate(c *gin.Context) {
 
 	// create desc file to github
 	go func(id string) {
-		_, _ = github.GetGithubClient().CreateMdFile(id, service.AsnUploadTypeApp)
+		_, _ = service.GetGithubClient().CreateMdFile(id, service.AsnUploadTypeApp)
 	}(up.ID)
 
 	a.Success(up)

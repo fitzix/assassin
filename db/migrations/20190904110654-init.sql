@@ -46,6 +46,7 @@ CREATE TABLE "app" (
     "type"       INT2      DEFAULT 0     NOT NULL,
     "icon"       VARCHAR(100)            NOT NULL,
     "title"      VARCHAR(200),
+    "category"   INT       DEFAULT 1     NOT NULL,
     "created_at" TIMESTAMP               NOT NULL,
     "updated_at" TIMESTAMP               NOT NULL,
     "version_at" TIMESTAMP DEFAULT NOW() NOT NULL,
@@ -76,28 +77,25 @@ CREATE INDEX ON "app_tag" ("app_id");
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-DROP TABLE IF EXISTS "app_category";
-CREATE TABLE "app_category" (
-    "id"          SERIAL PRIMARY KEY,
-    "app_id"      CHAR(16) NOT NULL,
-    "category_id" INT      NOT NULL
-);
+-- DROP TABLE IF EXISTS "app_category";
+-- CREATE TABLE "app_category" (
+--     "id"          SERIAL PRIMARY KEY,
+--     "app_id"      CHAR(16) NOT NULL,
+--     "category_id" INT      NOT NULL
+-- );
 
-CREATE INDEX ON "app_category" ("app_id");
+-- CREATE INDEX ON "app_category" ("app_id");
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 DROP TABLE IF EXISTS "app_version";
 CREATE TABLE "app_version" (
-    "id"          SERIAL PRIMARY KEY,
-    "app_id"      CHAR(16)          NOT NULL,
-    "version"     VARCHAR(10)       NOT NULL,
-    "size"        VARCHAR(10),
-    "download_id" INT2              NOT NULL,
-    "url"         VARCHAR(100)      NOT NULL,
-    "secret"      VARCHAR(50),
-    "created_at"  TIMESTAMP         NOT NULL,
-    "status"      BOOL DEFAULT TRUE NOT NULL,
+    "id"         SERIAL PRIMARY KEY,
+    "app_id"     CHAR(16)          NOT NULL,
+    "version"    VARCHAR(10)       NOT NULL,
+    "size"       VARCHAR(10),
+    "created_at" TIMESTAMP         NOT NULL,
+    "status"     BOOL DEFAULT TRUE NOT NULL,
     CONSTRAINT " u_app_version " UNIQUE ("app_id", "version")
 );
 CREATE INDEX ON "app_version" ("app_id");
@@ -109,6 +107,18 @@ CREATE TABLE "download" (
     "id"   SERIAL PRIMARY KEY,
     "name" VARCHAR(50) NOT NULL
 );
+
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+DROP TABLE IF EXISTS "app_version_download";
+CREATE TABLE "app_version_download" (
+    "id"          SERIAL PRIMARY KEY,
+    "app_version_id"  INT          NOT NULL,
+    "download_id" INT          NOT NULL,
+    "url"         VARCHAR(100) NOT NULL,
+    "secret"      VARCHAR(50)
+);
+CREATE INDEX ON "app_version_download" ("app_version_id", "download_id");
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 

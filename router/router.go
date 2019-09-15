@@ -9,8 +9,6 @@ import (
 func InitRouter(r *gin.Engine) {
 	v1 := r.Group("/api/v1")
 
-
-
 	// =================需要登录==================
 	authGroup := v1.Group("")
 	authGroup.Use(middlewares.Jwt())
@@ -36,9 +34,6 @@ func InitRouter(r *gin.Engine) {
 	// upload
 	authGroup.POST("/upload", controllers.Upload)
 
-
-
-
 	// ================公开接口===================
 	publicGroup := v1.Group("")
 
@@ -53,4 +48,6 @@ func InitRouter(r *gin.Engine) {
 	publicGroup.GET("/tags", controllers.TagList)
 	// categories
 	publicGroup.GET("/categories", controllers.CategoryList)
+	// download types
+	publicGroup.GET("/downloads", controllers.DownloadList)
 }

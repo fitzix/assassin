@@ -1,4 +1,4 @@
-package github
+package service
 
 import (
 	"context"
@@ -8,38 +8,17 @@ import (
 	"path/filepath"
 
 	"github.com/fitzix/assassin/models"
-	"github.com/fitzix/assassin/service"
-	"github.com/fitzix/assassin/utils"
 	"github.com/fitzix/assassin/utils/encrypt"
 	"github.com/google/go-github/v28/github"
-	"golang.org/x/oauth2"
 )
 
-type githubClient struct {
+type GithubClient struct {
 	client *github.Client
 	models.Github
 	ctx context.Context
 }
 
-var client *githubClient
-
-func InitGithubClient() {
-	conf := utils.GetConf().Github
-
-	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(&oauth2.Token{
-		AccessToken: conf.Token,
-	})
-	tc := oauth2.NewClient(ctx, ts)
-
-	client = &githubClient{
-		client: github.NewClient(tc),
-		Github: conf,
-		ctx:    ctx,
-	}
-}
-
-func (c *githubClient) UploadToGithub(fileName, filePath string, content []byte) (string, error) {
+func (c *GithubClient) UploadToGithub(fileName, filePath string, content []byte) (string, error) {
 	opts := &github.RepositoryContentFileOptions{
 		Message: github.String("upload file by asins.xyz"),
 		Content: content,
@@ -54,7 +33,7 @@ func (c *githubClient) UploadToGithub(fileName, filePath string, content []byte)
 	return fileName, nil
 }
 
-func (c *githubClient) UploadFromFileHeader(file *multipart.FileHeader) (string, error) {
+func (c *GithubClient) UploadFromFileHeader(file *multipart.FileHeader) (string, error) {
 	src, err := file.Open()
 	if err != nil {
 		return "", err
@@ -71,22 +50,18 @@ func (c *githubClient) UploadFromFileHeader(file *multipart.FileHeader) (string,
 	return c.UploadToGithub(fileName, c.ImgPath, fileByte)
 }
 
-func (c *githubClient) CreateMdFile(fileName string, uploadType int) (string, error) {
+func (c *GithubClient) CreateMdFile(fileName string, uploadType int) (string, error) {
 	filePath := c.AppDescPath
-	if uploadType == service.AsnUploadTypeArticle {
+	if uploadType == AsnUploadTypeArticle {
 		filePath = c.ArticlePath
 	}
-	fileByte := service.GetTmplContent(uploadType)
+	fileByte := GetTmplContent(uploadType)
 
 	name, err := c.UploadToGithub(fileName+".md", filePath, fileByte)
 
 	if err != nil {
-		utils.GetLogger().Sugar().Warnf("upload md file to github err: %s", err)
+		zapLogger.Sugar().Warnf("upload md file to github err: %s", err)
 	}
 
 	return name, err
-}
-
-func GetGithubClient() *githubClient {
-	return client
 }

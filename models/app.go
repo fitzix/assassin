@@ -18,6 +18,7 @@ type App struct {
 	Icon      string     `json:"icon"`
 	Title     string     `json:"title"`
 	Status    bool       `json:"status"`
+	Category  int        `json:"category"`
 	CreatedAt time.Time  `json:"-"`
 	UpdatedAt time.Time  `json:"-"`
 	DeletedAt *time.Time `json:"-"`
@@ -31,9 +32,9 @@ type AppCarousel struct {
 }
 
 type AppTag struct {
-	ID    uint
-	AppId string
-	TagId uint
+	ID    uint   `json:"id"`
+	AppId string `json:"appId"`
+	TagId uint   `json:"tagId"`
 }
 
 func (a *App) CouldUpdateColumns() []interface{} {

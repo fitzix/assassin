@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/fitzix/assassin/models"
-	"github.com/fitzix/assassin/utils/encrypt"
+	"github.com/fitzix/assassin/service"
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,7 +17,7 @@ func Jwt() gin.HandlerFunc {
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		token, err := encrypt.ParseToken(tokenSlice[1])
+		token, err := service.ParseToken(tokenSlice[1])
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, models.Response{
 				Code: http.StatusUnauthorized,

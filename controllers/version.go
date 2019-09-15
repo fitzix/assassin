@@ -48,3 +48,13 @@ func VersionCreate(c *gin.Context) {
 func VersionUpdate(c *gin.Context) {
 
 }
+
+func DownloadList(c *gin.Context) {
+	a := service.NewAsnGin(c)
+	var down []models.Download
+	if err := a.D.Find(&down).Error; err != nil {
+		a.Fail(service.StatusWebBadRequest, err)
+		return
+	}
+	a.Success(down)
+}

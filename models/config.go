@@ -5,6 +5,7 @@ type Config struct {
 	Db
 	Github
 	Jwt
+	Encrypt
 }
 
 func NewConfig() *Config {
@@ -31,6 +32,10 @@ func NewConfig() *Config {
 			Issuer:  "asn.xyz",
 			Expires: 24 * 7,
 			Secret:  "asn.io",
+		},
+		Encrypt: Encrypt{
+			Iv:  "ADB23285B2F0CF1F",
+			Key: "3C221351CA73FFA6",
 		},
 	}
 }
@@ -59,4 +64,9 @@ type Jwt struct {
 	Expires int
 	// hour
 	Secret string
+}
+
+type Encrypt struct {
+	Iv  string
+	Key string
 }

@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"github.com/fitzix/assassin/service"
-	"github.com/fitzix/assassin/utils/github"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,7 +17,7 @@ func Upload(c *gin.Context) {
 		return
 	}
 
-	url, err := github.GetGithubClient().UploadFromFileHeader(file)
+	url, err := service.GetGithubClient().UploadFromFileHeader(file)
 
 	if err != nil {
 		a.Fail(service.StatusWebBadRequest, err)

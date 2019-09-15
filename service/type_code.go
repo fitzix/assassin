@@ -4,6 +4,9 @@ const (
 	AsnAppTypeApp = iota
 	AsnAppTypeBook
 
+	AsnAppOrderNew = iota
+	AsnAppOrderHot
+
 	AsnUploadTypeApp = iota
 	AsnUploadTypeArticle
 )
@@ -11,11 +14,13 @@ const (
 var appTypeName = map[string]int{
 	"app":  AsnAppTypeApp,
 	"book": AsnAppTypeBook,
+	"hot":  AsnAppOrderHot,
+	"new":  AsnAppOrderNew,
 }
 
-func AsnAppType(t string) int {
+func AsnType(t string) int {
 	if typeCode, ok := appTypeName[t]; ok {
 		return typeCode
 	}
-	return 0
+	return -1
 }
