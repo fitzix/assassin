@@ -16,14 +16,14 @@ type App struct {
 	models.App
 	View      int                  `json:"view"`
 	Hot       int                  `json:"hot"`
-	Versions  []models.AppVersion  `json:"versions"`
+	Versions  []AppVersion  `json:"versions"`
 	Tags      []models.AppTag      `json:"tags"`
 	Carousels []models.AppCarousel `json:"carousels"`
 }
 
 type AppVersion struct {
 	models.AppVersion
-	AppVersionDownloads []models.AppVersionDownload `json:"downloads"`
+	AppVersionDownloads []AppVersionDownload `json:"downloads"`
 }
 
 type AppVersionDownload struct {

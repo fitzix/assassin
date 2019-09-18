@@ -33,6 +33,7 @@ func InitProject() {
 	initConf()
 	initLogger()
 	initGithubClient()
+	initDb()
 }
 
 func initGithubClient() {
@@ -107,7 +108,7 @@ func initLogger() {
 	zapLogger = zap.New(core, zap.AddStacktrace(zapcore.ErrorLevel), zap.AddCaller())
 }
 
-func InitDb() {
+func initDb() {
 	conf := appConf.Db
 	var err error
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", conf.Host, conf.Port, conf.User, conf.Password, conf.Dbname)

@@ -11,7 +11,6 @@ type AppVersion struct {
 	Size                string               `json:"size"`
 	Status              bool                 `json:"status"`
 	CreatedAt           time.Time            `json:"createdAt"`
-	AppVersionDownloads []AppVersionDownload `json:"downloads"`
 }
 
 type Download struct {
