@@ -22,8 +22,8 @@ func InitRouter(r *gin.Engine) {
 
 	authGroup.PUT("/apps/:id/tags", controllers.AppTagsCreateOrUpdate)
 	// version
-	authGroup.POST("/apps/:id/version", controllers.VersionCreate)
-	authGroup.PUT("/apps/:id/version/:versionId", controllers.VersionUpdate)
+	authGroup.POST("/apps/:id/versions", controllers.VersionCreate)
+	authGroup.PUT("/apps/:id/versions/:versionId", controllers.VersionUpdate)
 	// carousel
 	authGroup.POST("/apps/:id/carousels", controllers.CarouselCreate)
 	authGroup.DELETE("/apps/:id/carousels/:cid", controllers.CarouselDelete)

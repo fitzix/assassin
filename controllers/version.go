@@ -22,13 +22,14 @@ func AppVersion(c *gin.Context) {
 
 func VersionCreate(c *gin.Context) {
 	a := service.NewAsnGin(c)
-	var up models.AppVersion
-	up.AppId = c.Param("id")
+	var up service.AppVersion
 
 	if err := c.ShouldBind(&up); err != nil {
 		a.Fail(service.StatusWebParamErr, err)
 		return
 	}
+	up.AppId = c.Param("id")
+
 	tx := a.D.Begin()
 	if err := tx.Create(&up).Error; err != nil {
 		tx.Rollback()
@@ -46,7 +47,20 @@ func VersionCreate(c *gin.Context) {
 }
 
 func VersionUpdate(c *gin.Context) {
+	a := service.NewAsnGin(c)
+	var up service.AppVersion
 
+	if err := c.BindJSON(&up); err != nil {
+		a.Fail(service.StatusWebParamErr, err)
+		return
+	}
+
+	if err := a.D.Save(&up).Error; err != nil {
+		a.Fail(service.StatusWebBadRequest, err)
+		return
+	}
+
+	a.Success(up)
 }
 
 func DownloadList(c *gin.Context) {

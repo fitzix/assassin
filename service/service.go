@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/base64"
 	"fmt"
 
 	"github.com/fitzix/assassin/utils/encrypt"
@@ -8,12 +9,14 @@ import (
 )
 
 func AesEncrypt(rawData string) string {
-	msg, err := encrypt.AesEncrypt(rawData, appConf.Encrypt.Key, appConf.Encrypt.Iv)
+	// msg, err := encrypt.AESCBCPKCS7EncryptWithIV([]byte(appConf.Encrypt.Iv), []byte(appConf.Encrypt.Key), []byte(rawData))
+	msg, err := encrypt.AESCBCPKCS7Encrypt([]byte(appConf.Encrypt.Key), []byte(rawData))
 	if err != nil {
 		zapLogger.Sugar().Errorf("AesEncrypt err: %s", err)
 		return ""
 	}
-	return msg
+
+	return base64.StdEncoding.EncodeToString(msg)
 }
 
 func PassEncrypt(password string) string {

@@ -5,17 +5,17 @@ import (
 )
 
 type AppVersion struct {
-	ID                  int                  `json:"id"`
-	Name                string               `json:"name" binding:"required"`
-	AppId               string               `json:"appId"`
-	Size                string               `json:"size"`
-	Status              bool                 `json:"status"`
-	CreatedAt           time.Time            `json:"createdAt"`
+	ID        int       `json:"id"`
+	Name      string    `json:"name" binding:"required"`
+	AppId     string    `json:"appId"`
+	Size      string    `json:"size"`
+	Status    bool      `json:"status"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type Download struct {
-	ID   uint
-	Name string
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
 }
 
 type AppVersionDownload struct {

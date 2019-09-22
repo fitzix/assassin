@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/rand"
+	"errors"
 	"fmt"
-	"strings"
+	"io"
 
 	"github.com/matoous/go-nanoid"
 	"golang.org/x/crypto/scrypt"
@@ -24,48 +26,84 @@ func PassEncrypt(password, salt string) (string, error) {
 	return fmt.Sprintf("%x", dk), nil
 }
 
-/*CBC加密 按照golang标准库的例子代码
-不过里面没有填充的部分,所以补上
-*/
-
-// 使用PKCS7进行填充，IOS也是7
-func PKCS7Padding(cipherText []byte, blockSize int) []byte {
-	padding := blockSize - len(cipherText)%blockSize
-	padText := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(cipherText, padText...)
+func pkcs7Padding(src []byte) []byte {
+	padding := aes.BlockSize - len(src)%aes.BlockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(src, padtext...)
 }
 
-// func PKCS7UnPadding(origData []byte) []byte {
-// 	length := len(origData)
-// 	unPadding := int(origData[length-1])
-// 	return origData[:(length - unPadding)]
-// }
+func aesCBCEncryptWithIV(IV []byte, key, s []byte) ([]byte, error) {
+	if len(s)%aes.BlockSize != 0 {
+		return nil, errors.New("invalid plaintext. It must be a multiple of the block size")
+	}
 
-// aes加密，填充秘钥key的16位，24,32分别对应AES-128, AES-192, or AES-256.
-func aesCBCEncrypt(rawData, key, iv []byte) ([]byte, error) {
+	if len(IV) != aes.BlockSize {
+		return nil, errors.New("invalid IV. It must have length the block size")
+	}
+
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	// 填充原文
-	blockSize := block.BlockSize()
-	rawData = PKCS7Padding(rawData, blockSize)
-	// 初始向量IV必须是唯一，但不需要保密
-	cipherText := make([]byte, blockSize)
-	// block大小 16
+	ciphertext := make([]byte, aes.BlockSize+len(s))
+	copy(ciphertext[:aes.BlockSize], IV)
 
-	// block大小和初始向量大小一定要一致
-	mode := cipher.NewCBCEncrypter(block, iv)
-	mode.CryptBlocks(cipherText, rawData)
+	mode := cipher.NewCBCEncrypter(block, IV)
+	mode.CryptBlocks(ciphertext[aes.BlockSize:], s)
 
-	return cipherText, nil
+	return ciphertext, nil
 }
 
-func AesEncrypt(rawData, key, iv string) (string, error) {
-	data, err := aesCBCEncrypt([]byte(rawData), []byte(key), []byte(iv))
-	if err != nil {
-		return "", err
+func aesCBCEncryptWithRand(prng io.Reader, key, s []byte) ([]byte, error) {
+	if len(s)%aes.BlockSize != 0 {
+		return nil, errors.New("invalid plaintext. It must be a multiple of the block size")
 	}
-	return strings.ToUpper(fmt.Sprintf("%x", data)), nil
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	ciphertext := make([]byte, aes.BlockSize+len(s))
+	iv := ciphertext[:aes.BlockSize]
+	if _, err := io.ReadFull(prng, iv); err != nil {
+		return nil, err
+	}
+
+	mode := cipher.NewCBCEncrypter(block, iv)
+	mode.CryptBlocks(ciphertext[aes.BlockSize:], s)
+
+	return ciphertext, nil
+}
+
+func aesCBCEncrypt(key, s []byte) ([]byte, error) {
+	return aesCBCEncryptWithRand(rand.Reader, key, s)
+}
+
+// AESCBCPKCS7Encrypt combines CBC encryption and PKCS7 padding, the IV used is the one passed to the function
+func AESCBCPKCS7EncryptWithIV(IV []byte, key, src []byte) ([]byte, error) {
+	// First pad
+	tmp := pkcs7Padding(src)
+
+	// Then encrypt
+	return aesCBCEncryptWithIV(IV, key, tmp)
+}
+
+// AESCBCPKCS7Encrypt combines CBC encryption and PKCS7 padding
+func AESCBCPKCS7Encrypt(key, src []byte) ([]byte, error) {
+	// First pad
+	tmp := pkcs7Padding(src)
+
+	// Then encrypt
+	return aesCBCEncrypt(key, tmp)
+}
+
+// AESCBCPKCS7Encrypt combines CBC encryption and PKCS7 padding using as prng the passed to the function
+func AESCBCPKCS7EncryptWithRand(prng io.Reader, key, src []byte) ([]byte, error) {
+	// First pad
+	tmp := pkcs7Padding(src)
+
+	// Then encrypt
+	return aesCBCEncryptWithRand(prng, key, tmp)
 }
