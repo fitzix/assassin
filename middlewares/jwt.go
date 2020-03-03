@@ -13,7 +13,6 @@ import (
 // TODO check token code
 func Jwt() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		fmt.Println(c.GetHeader("Authorization"))
 		token, err := service.ParseToken(strings.TrimPrefix(c.GetHeader("Authorization"), "Bearer "))
 		if err != nil {
 			fmt.Printf("%s", err)

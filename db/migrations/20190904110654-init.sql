@@ -9,7 +9,8 @@ CREATE TABLE "user" (
     "name"     VARCHAR(50) UNIQUE NOT NULL,
     "password" CHAR(32)           NOT NULL,
     "role_id"  INT                NOT NULL,
-    "code"     INT DEFAULT 0      NOT NULL
+    "code"     INT  DEFAULT 0     NOT NULL,
+    "status"   BOOL DEFAULT TRUE  NOT NULL
 );
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -91,6 +92,7 @@ CREATE INDEX ON "app_tag" ("app_id");
 DROP TABLE IF EXISTS "app_version";
 CREATE TABLE "app_version" (
     "id"         SERIAL PRIMARY KEY,
+    "name"       VARCHAR(10)       NOT NULL,
     "app_id"     CHAR(16)          NOT NULL,
     "version"    VARCHAR(10)       NOT NULL,
     "size"       VARCHAR(10),
@@ -112,11 +114,11 @@ CREATE TABLE "download" (
 
 DROP TABLE IF EXISTS "app_version_download";
 CREATE TABLE "app_version_download" (
-    "id"          SERIAL PRIMARY KEY,
-    "app_version_id"  INT          NOT NULL,
-    "download_id" INT          NOT NULL,
-    "url"         VARCHAR(100) NOT NULL,
-    "secret"      VARCHAR(50)
+    "id"             SERIAL PRIMARY KEY,
+    "app_version_id" INT          NOT NULL,
+    "download_id"    INT          NOT NULL,
+    "url"            VARCHAR(100) NOT NULL,
+    "secret"         VARCHAR(50)
 );
 CREATE INDEX ON "app_version_download" ("app_version_id", "download_id");
 
@@ -149,6 +151,6 @@ DROP TABLE IF EXISTS "tag";
 DROP TABLE IF EXISTS "app";
 DROP TABLE IF EXISTS "app_tag";
 DROP TABLE IF EXISTS "app_version";
-DROP TABLE IF EXISTS "app_category";
+-- DROP TABLE IF EXISTS "app_category";
 DROP TABLE IF EXISTS "download";
 DROP TABLE IF EXISTS "app_hot";

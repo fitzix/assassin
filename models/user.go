@@ -6,4 +6,9 @@ type User struct {
 	Password string `json:"-"`
 	RoleId   int    `json:"roleId"`
 	Code     uint   `json:"-"`
+	Status   bool   `json:"status"`
+}
+
+type UserLoginResp struct {
+	Token string `json:"token"`
 }

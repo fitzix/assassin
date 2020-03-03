@@ -30,11 +30,10 @@ func NewConfig() *Config {
 		},
 		Jwt: Jwt{
 			Issuer:  "asn.xyz",
-			Expires: 24 * 7,
+			Expires: 24 * 3,
 			Secret:  "asn.io",
 		},
 		Encrypt: Encrypt{
-			Iv:  "ADB23285B2F0CF1F",
 			Key: "3C221351CA73FFA6",
 		},
 	}
@@ -67,6 +66,5 @@ type Jwt struct {
 }
 
 type Encrypt struct {
-	Iv  string
 	Key string
 }

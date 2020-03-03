@@ -72,3 +72,9 @@ func (a *AsnGin) GetToken() Token {
 	token, _ := a.C.Get("token")
 	return *token.(*Token)
 }
+
+
+func (a *AsnGin) IsAuth() bool {
+	_, exists := a.C.Get("token")
+	return exists
+}

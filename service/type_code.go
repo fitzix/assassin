@@ -4,6 +4,9 @@ const (
 	AsnAppTypeApp = iota
 	AsnAppTypeBook
 
+	AsnAppStatusUnPublish = iota
+	AsnAppStatusPublish
+
 	AsnAppOrderNew = iota
 	AsnAppOrderHot
 
@@ -12,10 +15,12 @@ const (
 )
 
 var appTypeName = map[string]int{
-	"app":  AsnAppTypeApp,
-	"book": AsnAppTypeBook,
-	"hot":  AsnAppOrderHot,
-	"new":  AsnAppOrderNew,
+	"app":   AsnAppTypeApp,
+	"book":  AsnAppTypeBook,
+	"hot":   AsnAppOrderHot,
+	"new":   AsnAppOrderNew,
+	"pub":   AsnAppStatusPublish,
+	"unpub": AsnAppStatusUnPublish,
 }
 
 func AsnType(t string) int {

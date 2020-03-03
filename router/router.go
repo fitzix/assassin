@@ -19,6 +19,8 @@ func InitRouter(r *gin.Engine) {
 	// app
 	authGroup.POST("/apps", controllers.AppCreate)
 	authGroup.PUT("/apps/:id", controllers.AppUpdate)
+	authGroup.GET("/auth/apps", controllers.AppAuthorizedList)
+	authGroup.GET("/auth/apps/:id", controllers.AppAuthorizedIndex)
 
 	authGroup.PUT("/apps/:id/tags", controllers.AppTagsCreateOrUpdate)
 	// version
@@ -38,7 +40,7 @@ func InitRouter(r *gin.Engine) {
 	publicGroup := v1.Group("")
 
 	// user
-	publicGroup.POST("/users/login", controllers.UserLogin)
+	publicGroup.POST("/login", controllers.UserLogin)
 
 	// app
 	publicGroup.GET("/apps", controllers.AppList)

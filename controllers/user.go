@@ -15,6 +15,8 @@ func UserLogin(c *gin.Context) {
 	}
 	var user models.User
 	encPwd := service.PassEncrypt(up.Password)
+	a.L.Warnf("======> %s", encPwd)
+
 	if err := a.D.Find(&user, "name = ? AND password = ?", up.UserName, encPwd).Error; err != nil {
 		a.Fail(service.StatusWebAuthWrongPwd, err)
 		return
@@ -30,7 +32,7 @@ func UserLogin(c *gin.Context) {
 		return
 	}
 
-	a.Success(tokenString)
+	a.Success(models.UserLoginResp{Token: tokenString})
 }
 
 func UserCreate(c *gin.Context) {
