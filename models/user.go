@@ -9,6 +9,11 @@ type User struct {
 	Status   bool   `json:"status"`
 }
 
-type UserLoginResp struct {
+type UserLoginReq struct {
+	UserName string `json:"name" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
+}
+
+type UserLoginRsp struct {
 	Token string `json:"token"`
 }

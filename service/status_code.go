@@ -1,7 +1,5 @@
 package service
 
-type AsnStatusCode int
-
 // A-B-CC
 const (
 	StatusSuccess = 0
@@ -35,7 +33,7 @@ const (
 	StatusWebUserNameExist        = 3603
 )
 
-var statusText = map[AsnStatusCode]string{
+var statusText = map[int]string{
 	StatusSuccess:                "ok",
 	StatusWebBadRequest:          "请求出错",
 	StatusWebOperateErr:          "操作失败",
@@ -65,6 +63,6 @@ var statusText = map[AsnStatusCode]string{
 
 // StatusText returns a text for the HTTP status code. It returns the empty
 // string if the code is unknown.
-func AsnStatusText(code AsnStatusCode) string {
+func AsnStatusText(code int) string {
 	return statusText[code]
 }

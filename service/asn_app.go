@@ -1,14 +1,20 @@
 package service
 
 import (
-	"net/http"
 	"strconv"
 
+	"github.com/fitzix/assassin/ent"
 	"github.com/fitzix/assassin/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 )
+
+type Context struct {
+	echo.Context
+	Db *ent.Client
+}
 
 type AsnGin struct {
 	C *gin.Context
@@ -24,29 +30,33 @@ func NewAsnGin(c *gin.Context) *AsnGin {
 	}
 }
 
-// Response setting gin.JSON
-func (a *AsnGin) Response(code AsnStatusCode, data interface{}) {
-	a.C.JSON(http.StatusOK, models.Response{
-		Code: int(code),
+func (c *Context) Resp(code int, data interface{}) error {
+	return c.JSON(200, models.Response{
+		Code: code,
 		Msg:  AsnStatusText(code),
 		Data: data,
 	})
 }
 
-func (a *AsnGin) Success(data interface{}) {
-	a.Response(0, data)
+func (c *Context) Success(data interface{}) error {
+	return c.Resp(StatusSuccess, data)
 }
 
-func (a *AsnGin) SuccessWithPage(total int, data interface{}) {
-	a.Success(models.PageDown{
+func (c *Context) SuccessWithPage(total int, data interface{}) error {
+	return c.Success(models.PageDown{
 		Total: total,
 		Info:  data,
 	})
 }
 
-func (a *AsnGin) Fail(code AsnStatusCode, err error) {
-	a.L.Warnf("response err, code: %d, err: %s", code, err)
-	a.Response(code, nil)
+func (c *Context) Err(code int, err error) error {
+	c.Logger().Warnf("response err, code: %d, err: %s", code, err)
+	return c.Resp(code, nil)
+}
+
+func (c *Context) GetToken() (models.Token, bool) {
+	v, ok := c.Get("token").(models.Token)
+	return v, ok
 }
 
 func (a *AsnGin) Page(query *gorm.DB, data interface{}, count interface{}) error {
@@ -72,7 +82,6 @@ func (a *AsnGin) GetToken() Token {
 	token, _ := a.C.Get("token")
 	return *token.(*Token)
 }
-
 
 func (a *AsnGin) IsAuth() bool {
 	_, exists := a.C.Get("token")

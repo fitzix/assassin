@@ -4,6 +4,7 @@ import (
 	"github.com/fitzix/assassin/controllers"
 	"github.com/fitzix/assassin/middlewares"
 	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 )
 
 func InitRouter(r *gin.Engine) {
@@ -52,4 +53,19 @@ func InitRouter(r *gin.Engine) {
 	publicGroup.GET("/categories", controllers.CategoryList)
 	// download types
 	publicGroup.GET("/downloads", controllers.DownloadList)
+}
+
+func Route(e *echo.Echo) {
+	v1 := e.Group("/api/v1")
+
+	auth := v1.Group("")
+	auth.Use(middlewares.JWT())
+	{
+		auth.POST("/users", nil)
+	}
+
+	public := v1.Group("")
+	{
+		public.POST("/login", nil)
+	}
 }

@@ -60,9 +60,8 @@ type Github struct {
 
 type Jwt struct {
 	Issuer  string
-	Expires int
-	// hour
-	Secret string
+	Expires int // hour
+	Secret  string
 }
 
 type Encrypt struct {
