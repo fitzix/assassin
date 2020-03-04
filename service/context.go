@@ -1,9 +1,9 @@
 package service
 
 import (
+	"net/http"
 	"strconv"
 
-	"github.com/fitzix/assassin/ent"
 	"github.com/fitzix/assassin/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
@@ -13,7 +13,6 @@ import (
 
 type Context struct {
 	echo.Context
-	Db *ent.Client
 }
 
 type AsnGin struct {
@@ -28,6 +27,16 @@ func NewAsnGin(c *gin.Context) *AsnGin {
 		D: dbInstance,
 		L: zapLogger.Sugar(),
 	}
+}
+
+func (c *Context) ShouldBind(i interface{}) error {
+	if err := c.Bind(i); err != nil {
+		return err
+	}
+	if err := c.Validate(i); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *Context) Resp(code int, data interface{}) error {
@@ -86,4 +95,29 @@ func (a *AsnGin) GetToken() Token {
 func (a *AsnGin) IsAuth() bool {
 	_, exists := a.C.Get("token")
 	return exists
+}
+
+// Response setting gin.JSON
+func (a *AsnGin) Response(code int, data interface{}) {
+	a.C.JSON(http.StatusOK, models.Response{
+		Code: code,
+		Msg:  AsnStatusText(code),
+		Data: data,
+	})
+}
+
+func (a *AsnGin) Success(data interface{}) {
+	a.Response(0, data)
+}
+
+func (a *AsnGin) SuccessWithPage(total int, data interface{}) {
+	a.Success(models.PageDown{
+		Total: total,
+		Info:  data,
+	})
+}
+
+func (a *AsnGin) Fail(code int, err error) {
+	a.L.Warnf("response err, code: %d, err: %s", code, err)
+	a.Response(code, nil)
 }

@@ -22,8 +22,8 @@ func UserLogin(c *gin.Context) {
 		return
 	}
 
-	token := service.Token{
-		Uid:  user.ID,
+	token := models.Token{
+		Uid:  0,
 		Code: user.Code,
 	}
 	tokenString, err := service.GenJwt(token)
@@ -32,7 +32,7 @@ func UserLogin(c *gin.Context) {
 		return
 	}
 
-	a.Success(models.UserLoginResp{Token: tokenString})
+	a.Success(models.UserLoginRsp{Token: tokenString})
 }
 
 func UserCreate(c *gin.Context) {

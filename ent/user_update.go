@@ -22,7 +22,6 @@ type UserUpdate struct {
 	password    *string
 	code        *uint
 	addcode     *uint
-	clearcode   bool
 	status      *user.Status
 	role        map[int]struct{}
 	clearedRole bool
@@ -69,13 +68,6 @@ func (uu *UserUpdate) AddCode(u uint) *UserUpdate {
 	} else {
 		*uu.addcode += u
 	}
-	return uu
-}
-
-// ClearCode clears the value of code.
-func (uu *UserUpdate) ClearCode() *UserUpdate {
-	uu.code = nil
-	uu.clearcode = true
 	return uu
 }
 
@@ -212,12 +204,6 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: user.FieldCode,
 		})
 	}
-	if uu.clearcode {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeUint,
-			Column: user.FieldCode,
-		})
-	}
 	if value := uu.status; value != nil {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeEnum,
@@ -277,7 +263,6 @@ type UserUpdateOne struct {
 	password    *string
 	code        *uint
 	addcode     *uint
-	clearcode   bool
 	status      *user.Status
 	role        map[int]struct{}
 	clearedRole bool
@@ -317,13 +302,6 @@ func (uuo *UserUpdateOne) AddCode(u uint) *UserUpdateOne {
 	} else {
 		*uuo.addcode += u
 	}
-	return uuo
-}
-
-// ClearCode clears the value of code.
-func (uuo *UserUpdateOne) ClearCode() *UserUpdateOne {
-	uuo.code = nil
-	uuo.clearcode = true
 	return uuo
 }
 
@@ -451,12 +429,6 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (u *User, err error) {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
 			Type:   field.TypeUint,
 			Value:  *value,
-			Column: user.FieldCode,
-		})
-	}
-	if uuo.clearcode {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeUint,
 			Column: user.FieldCode,
 		})
 	}

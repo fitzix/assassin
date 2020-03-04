@@ -20,9 +20,7 @@ var (
 
 func InitProject() {
 	initConf()
-	initLogger()
 	initGithubClient()
-	initDb()
 }
 
 func initGithubClient() {
@@ -39,4 +37,8 @@ func initGithubClient() {
 		Github: conf,
 		ctx:    ctx,
 	}
+}
+
+func GetGithubClient() *GithubClient {
+	return githubClient
 }

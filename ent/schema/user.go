@@ -15,8 +15,8 @@ type User struct {
 func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("name").MaxLen(50).NotEmpty(),
-		field.String("password").MinLen(32).MaxLen(32).NotEmpty().Sensitive(),
-		field.Uint("code").Positive().Default(0).Optional(),
+		field.String("password").NotEmpty().Sensitive(),
+		field.Uint("code").Positive().Default(1),
 		field.Enum("status").Values("normal", "abnormal").Default("normal").Comment("normal: 正常; abnormal: 下架;"),
 	}
 }

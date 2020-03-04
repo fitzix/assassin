@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/fitzix/assassin/controller"
 	"github.com/fitzix/assassin/controllers"
 	"github.com/fitzix/assassin/middlewares"
 	"github.com/gin-gonic/gin"
@@ -66,6 +67,7 @@ func Route(e *echo.Echo) {
 
 	public := v1.Group("")
 	{
-		public.POST("/login", nil)
+		public.POST("/login", controller.UserLogin)
+		public.POST("/users", controller.UserCreate)
 	}
 }

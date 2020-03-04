@@ -179,8 +179,8 @@ var (
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString, Size: 50},
-		{Name: "password", Type: field.TypeString, Size: 32},
-		{Name: "code", Type: field.TypeUint, Nullable: true, Default: user.DefaultCode},
+		{Name: "password", Type: field.TypeString},
+		{Name: "code", Type: field.TypeUint, Default: user.DefaultCode},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"normal", "abnormal"}, Default: user.DefaultStatus},
 		{Name: "user_role", Type: field.TypeInt, Nullable: true},
 	}

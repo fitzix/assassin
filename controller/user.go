@@ -13,14 +13,14 @@ import (
 func UserLogin(e echo.Context) error {
 	c := e.(*service.Context)
 	var up models.UserLoginReq
-	if err := c.Bind(&up); err != nil {
+	if err := c.ShouldBind(&up); err != nil {
 		return c.Err(service.StatusWebParamErr, err)
 	}
 	encPwd, err := utils.EncryptPass(up.Password)
 	if err != nil {
 		return c.Err(service.StatusWebBadRequest, err)
 	}
-	u, err := c.Db.User.Query().Where(user.Name(up.UserName), user.Password(string(encPwd))).Only(context.Background())
+	u, err := service.GetDB().User.Query().Where(user.Name(up.UserName), user.Password(string(encPwd))).Only(context.Background())
 	if err != nil {
 		return c.Err(service.StatusWebAuthWrongPwd, err)
 	}
@@ -38,14 +38,15 @@ func UserLogin(e echo.Context) error {
 func UserCreate(e echo.Context) error {
 	c := e.(*service.Context)
 	var up models.UserLoginReq
-	if err := c.Bind(&up); err != nil {
+	if err := c.ShouldBind(&up); err != nil {
 		return c.Err(service.StatusWebParamErr, err)
 	}
+
 	encPass, err := utils.EncryptPass(up.Password)
 	if err != nil {
 		return c.Err(service.StatusWebBadRequest, err)
 	}
-	u, err := c.Db.User.Create().SetName(up.UserName).SetPassword(string(encPass)).Save(context.Background())
+	u, err := service.GetDB().User.Create().SetName(up.UserName).SetPassword(string(encPass)).SetRoleID(1).Save(context.Background())
 	if err != nil {
 		return c.Err(service.StatusWebBadRequest, err)
 	}

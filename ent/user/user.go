@@ -72,22 +72,7 @@ var (
 	// descPassword is the schema descriptor for password field.
 	descPassword = fields[1].Descriptor()
 	// PasswordValidator is a validator for the "password" field. It is called by the builders before save.
-	PasswordValidator = func() func(string) error {
-		validators := descPassword.Validators
-		fns := [...]func(string) error{
-			validators[0].(func(string) error),
-			validators[1].(func(string) error),
-			validators[2].(func(string) error),
-		}
-		return func(password string) error {
-			for _, fn := range fns {
-				if err := fn(password); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-	}()
+	PasswordValidator = descPassword.Validators[0].(func(string) error)
 
 	// descCode is the schema descriptor for code field.
 	descCode = fields[2].Descriptor()
