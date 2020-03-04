@@ -14,7 +14,7 @@ func NewConfig() *Config {
 		Db: Db{
 			Host:     "127.0.0.1",
 			Port:     5432,
-			User:     "postgres",
+			User:     "fitz",
 			Password: "131833",
 			Dbname:   "assassin",
 		},
