@@ -14,7 +14,7 @@ type User struct {
 // Fields of the User.
 func (User) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("name").MaxLen(50).NotEmpty(),
+		field.String("name").MaxLen(50).NotEmpty().Unique(),
 		field.String("password").NotEmpty().Sensitive(),
 		field.Uint("code").Positive().Default(1),
 		field.Enum("status").Values("normal", "abnormal").Default("normal").Comment("normal: 正常; abnormal: 下架;"),
@@ -24,6 +24,6 @@ func (User) Fields() []ent.Field {
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("role", Role.Type).Unique().Required(),
+		edge.To("role", Role.Type).StructTag(`json:"role"`).Unique().Required(),
 	}
 }

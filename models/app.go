@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/fitzix/assassin/ent/app"
 )
 
 type AsnModel struct {
@@ -46,4 +48,20 @@ func (a *App) CouldUpdateColumns() []interface{} {
 		"status",
 		"update_at",
 	}
+}
+
+type PageReq struct {
+	PageSize int `json:"pageSize" query:"pageSize"`
+	PageNum  int `json:"pageNum" query:"pageNum"`
+}
+
+func NewPageReq() PageReq {
+	return PageReq{PageSize: 1, PageNum: 20}
+}
+
+type AppListReq struct {
+	Name  string   `query:"name"`
+	Type  app.Type `query:"type"`
+	Order string   `query:"order"`
+	PageReq
 }

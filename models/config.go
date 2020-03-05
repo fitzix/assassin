@@ -2,11 +2,12 @@ package models
 
 type Config struct {
 	Salt string
-	Env  string
+	Mod  string // 生产环境release
 	Db
 	Github
 	Jwt
 	Encrypt
+	S3
 }
 
 type Db struct {
@@ -36,4 +37,12 @@ type Jwt struct {
 
 type Encrypt struct {
 	Key string
+}
+
+type S3 struct {
+	Endpoint        string
+	AccessKeyID     string
+	SecretAccessKey string
+	UseSSL          bool
+	Bucket          string
 }

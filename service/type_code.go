@@ -1,7 +1,7 @@
 package service
 
 const (
-	AsnAppTypeApp = iota
+	AsnAppTypeApp = iota // app 类型
 	AsnAppTypeBook
 
 	AsnAppStatusUnPublish = iota

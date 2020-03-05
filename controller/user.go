@@ -16,23 +16,24 @@ func UserLogin(e echo.Context) error {
 	if err := c.ShouldBind(&up); err != nil {
 		return c.Err(service.StatusWebParamErr, err)
 	}
-	encPwd, err := utils.EncryptPass(up.Password)
-	if err != nil {
-		return c.Err(service.StatusWebBadRequest, err)
-	}
-	u, err := service.GetDB().User.Query().Where(user.Name(up.UserName), user.Password(string(encPwd))).Only(context.Background())
+	u, err := service.GetDB().User.Query().WithRole().Where(user.Name(up.UserName)).Only(context.Background())
 	if err != nil {
 		return c.Err(service.StatusWebAuthWrongPwd, err)
 	}
-	token := models.Token{
+	if !utils.CheckPass(u.Password, up.Password) {
+		return c.Err(service.StatusWebBadRequest, err)
+	}
+	t, err := service.GenJwt(models.Token{
 		Uid:  u.ID,
 		Code: u.Code,
-	}
-	t, err := service.GenJwt(token)
+	})
 	if err != nil {
 		return c.Err(service.StatusWebBadRequest, err)
 	}
-	return c.Success(models.UserLoginRsp{Token: t})
+	return c.Success(models.UserLoginRsp{
+		User:  u,
+		Token: t,
+	})
 }
 
 func UserCreate(e echo.Context) error {
@@ -50,5 +51,12 @@ func UserCreate(e echo.Context) error {
 	if err != nil {
 		return c.Err(service.StatusWebBadRequest, err)
 	}
-	return c.Success(u)
+	t, err := service.GenJwt(models.Token{
+		Uid:  u.ID,
+		Code: u.Code,
+	})
+	return c.Success(models.UserLoginRsp{
+		User:  u,
+		Token: t,
+	})
 }

@@ -62,12 +62,14 @@ func Route(e *echo.Echo) {
 	auth := v1.Group("")
 	auth.Use(middlewares.JWT())
 	{
-		auth.POST("/users", nil)
+		// upload
+		auth.POST("/uploads/img", controller.Upload)
 	}
 
 	public := v1.Group("")
 	{
 		public.POST("/login", controller.UserLogin)
 		public.POST("/users", controller.UserCreate)
+		public.GET("/apps", controller.AppList)
 	}
 }
