@@ -17,8 +17,6 @@ func main() {
 	r := gin.New()
 
 	r.Use(middlewares.Cors())
-	r.Use(middlewares.Zap(service.GetLogger()))
-	r.Use(middlewares.ZapRecovery(service.GetLogger(), true))
 
 	router.InitRouter(r)
 

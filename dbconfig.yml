@@ -1,5 +1,0 @@
-development:
-  dialect: postgres
-  datasource: user=postgres password=131833 dbname=assassin sslmode=disable
-  dir: db/migrations
-  table: migrations

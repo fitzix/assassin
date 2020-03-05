@@ -99,6 +99,7 @@ CREATE TABLE "provider" (
     "name" VARCHAR(50) NOT NULL
 );
 
+
 DROP TABLE IF EXISTS "source";
 CREATE TABLE "source" (
     "id"          SERIAL PRIMARY KEY,
@@ -122,6 +123,12 @@ COMMENT ON TABLE "hot" IS '下载和pv量统计表';
 COMMENT ON COLUMN "hot"."hot" IS '下载量';
 COMMENT ON COLUMN "hot"."view" IS '页面浏览量';
 
+-- init data
+INSERT INTO "role" ("name")
+VALUES ('默认角色');
+INSERT INTO "user" ("uid", "name", "password", "role_id")
+VALUES ('5-sT6lAKM3_weQIE', 'admin', '$2a$10$kX4Ianl/Ua4CLjxHLDi84OxsN6dN234DAwB2JRyJAyUP8mmz.cc2S', 1);
+
 
 -- +migrate Down
 DROP TABLE IF EXISTS "user";
@@ -132,6 +139,7 @@ DROP TABLE IF EXISTS "app";
 DROP TABLE IF EXISTS "app_tag";
 DROP TABLE IF EXISTS "provider";
 DROP TABLE IF EXISTS "app_category";
+DROP TABLE IF EXISTS "version";
 DROP TABLE IF EXISTS "source";
 DROP TABLE IF EXISTS "hot";
 DROP TABLE IF EXISTS "carousel";

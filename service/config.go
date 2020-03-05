@@ -2,18 +2,17 @@ package service
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"strings"
 
-	"github.com/fitzix/assassin/ent"
-	"github.com/fitzix/assassin/ent/migrate"
-	"github.com/fitzix/assassin/ent/role"
 	"github.com/fitzix/assassin/models"
+	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	_ "github.com/lib/pq"
+	"github.com/markbates/pkger"
 	"github.com/minio/minio-go/v6"
+	"github.com/rubenv/sql-migrate"
 	"github.com/spf13/viper"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"gopkg.in/yaml.v2"
@@ -21,7 +20,7 @@ import (
 
 var (
 	conf models.Config
-	db   *ent.Client
+	db   *sqlx.DB
 	s3   *minio.Client
 )
 
@@ -107,27 +106,22 @@ func initLogger(e *echo.Echo) {
 }
 
 func initDb(e *echo.Echo) {
-	var (
-		err         error
-		connOptions []ent.Option
-	)
-
-	if e.Debug {
-		connOptions = append(connOptions, ent.Debug(), ent.Log(e.Logger.Info))
-	}
-
-	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", conf.Host, conf.Port, conf.User, conf.Password, conf.Dbname)
-	db, err = ent.Open("postgres", connStr, connOptions...)
+	var err error
+	connOption := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", conf.Host, conf.Port, conf.User, conf.Password, conf.Dbname)
+	db, err = sqlx.Open("postgres", connOption)
 	if err != nil {
 		e.Logger.Fatal(err)
 	}
-	// run the auto migration tool.
-	if err := db.Schema.Create(
-		context.Background(),
-		migrate.WithDropIndex(true),
-		migrate.WithDropColumn(true),
-	); err != nil {
-		e.Logger.Fatalf("failed creating schema resources: %v", err)
+	if err := db.Ping(); err != nil {
+		e.Logger.Fatal(err)
+	}
+
+	migrations := &migrate.HttpFileSystemMigrationSource{
+		FileSystem: pkger.Dir("/migrations"),
+	}
+
+	if _, err := migrate.Exec(db.DB, "postgres", migrations, migrate.Up); err != nil {
+		e.Logger.Fatalf("migrate err: %s", err)
 	}
 }
 
@@ -185,25 +179,11 @@ func checkAndSetBucketPolicy(e *echo.Echo) {
 	// e.Logger.Fatalf("s3 get bucket policy err: %s", p)
 }
 
-func initRole(e *echo.Echo) {
-	ctx := context.Background()
-	exist, err := db.Role.Query().Where(role.ID(1)).Exist(ctx)
-	if err != nil {
-		e.Logger.Fatalf("init role error", err)
-	}
-	if exist {
-		return
-	}
-	if _, err := db.Role.Create().SetName("默认角色").Save(ctx); err != nil {
-		e.Logger.Fatalf("init role error", err)
-	}
-}
-
 func GetConf() models.Config {
 	return conf
 }
 
-func GetDB() *ent.Client {
+func GetDB() *sqlx.DB {
 	return db
 }
 
@@ -217,5 +197,4 @@ func Init(e *echo.Echo) {
 	initLogger(e)
 	initS3(e)
 	initDb(e)
-	initRole(e)
 }
