@@ -16,6 +16,7 @@ type Db struct {
 	User     string
 	Password string
 	Dbname   string
+	SSL      bool
 }
 
 type Github struct {

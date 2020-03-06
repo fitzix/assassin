@@ -2,9 +2,11 @@ package service
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"strings"
 
+	"github.com/fitzix/assassin/consts"
 	"github.com/fitzix/assassin/models"
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
@@ -36,6 +38,7 @@ func initConf() {
 			User:     "fitz",
 			Password: "131833",
 			Dbname:   "assassin-ent",
+			SSL:      false,
 		},
 		Jwt: models.Jwt{
 			Issuer:  "asn.xyz",
@@ -145,38 +148,57 @@ func initS3(e *echo.Echo) {
 	if err := s3.MakeBucket(conf.Bucket, "ap-east-1"); err != nil {
 		e.Logger.Fatalf("create minio bucket err: %s", err)
 	}
-	// (ARN) Amazon 资源名称 唯一标识 AWS 资源
-	// arn:partition:service:region:namespace:relative-id
-	// 协议:分区:服务:区域:bucket名称:资源路径
-	policy := `
-		{
-			"Version":"2012-10-17",
-			"Statement":[
-				{
-					"Sid":"AllowImageStatic",
-					"Action":"s3:GetObject",
-					"Effect":"Allow",
-					"Principal": "*",
-					"Resource":[
-						"arn:aws:s3:::%s/images/*"
-					]
-				}
-			]
+
+	setS3Policy(e, consts.S3PolicyAllowImageStatic)
+}
+
+// 检查图片资源是否公开
+func checkAndSetBucketPolicy(e *echo.Echo) {
+	p, err := s3.GetBucketPolicy(conf.Bucket)
+	if err != nil {
+		e.Logger.Fatalf("s3 get bucket policy err: %s", err)
+		return
+	}
+	if p == "" {
+		setS3Policy(e, consts.S3PolicyAllowImageStatic)
+		return
+	}
+
+	var policy models.S3Policy
+	if err := json.Unmarshal([]byte(p), &policy); err != nil {
+		e.Logger.Fatalf("s3 parse bucket policy err: %s", err)
+		return
+	}
+	if len(policy.Statement) > 0 {
+		for _, v := range policy.Statement {
+			if v.Sid == "AllowImageStatic" {
+				e.Logger.Info("s3 bucket policy checked ok")
+				return
+			}
 		}
-	`
+	}
+
+	var initPolicy models.S3Policy
+	if err := json.Unmarshal([]byte(consts.S3PolicyAllowImageStatic), &initPolicy); err != nil {
+		e.Logger.Fatalf("s3 parse init bucket policy err: %s", err)
+		return
+	}
+
+	policy.Statement = append(policy.Statement, initPolicy.Statement[0])
+
+	b, err := json.Marshal(&policy)
+	if err != nil {
+		e.Logger.Fatalf("s3 marshal new bucket policy err: %s", err)
+		return
+	}
+	setS3Policy(e, string(b))
+}
+
+func setS3Policy(e *echo.Echo, policy string) {
 	if err := s3.SetBucketPolicy(conf.Bucket, fmt.Sprintf(policy, conf.Bucket)); err != nil {
 		e.Logger.Fatalf("set s3 bucket policy err: %s", err)
 	}
-	e.Logger.Printf("Successfully created %s", conf.Bucket)
-}
-
-func checkAndSetBucketPolicy(e *echo.Echo) {
-	// p, err := s3.GetBucketPolicy(conf.Bucket)
-	// if err != nil {
-	// 	e.Logger.Fatalf("s3 get bucket policy err: %s", err)
-	// 	return
-	// }
-	// e.Logger.Fatalf("s3 get bucket policy err: %s", p)
+	e.Logger.Printf("successfully set bucket policy %s", conf.Bucket)
 }
 
 func GetConf() models.Config {
