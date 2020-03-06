@@ -1,7 +1,10 @@
 package models
 
+import "github.com/fitzix/assassin/ent"
+
 type User struct {
-	ID       string `json:"id"`
+	ID       int    `json:"-"`
+	UID      string `json:"uid"`
 	Name     string `json:"name" binding:"required,email"`
 	Password string `json:"-"`
 	RoleId   int    `json:"roleId"`
@@ -20,5 +23,6 @@ type UserCreateReq struct {
 }
 
 type UserLoginRsp struct {
+	*ent.User
 	Token string `json:"token"`
 }

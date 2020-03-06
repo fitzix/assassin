@@ -2,19 +2,19 @@ package service
 
 import (
 	"bytes"
-	"encoding/json"
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/fitzix/assassin/consts"
+	"github.com/fitzix/assassin/ent"
+	"github.com/fitzix/assassin/ent/migrate"
+	"github.com/fitzix/assassin/ent/role"
 	"github.com/fitzix/assassin/models"
-	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	_ "github.com/lib/pq"
-	"github.com/markbates/pkger"
 	"github.com/minio/minio-go/v6"
-	"github.com/rubenv/sql-migrate"
 	"github.com/spf13/viper"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"gopkg.in/yaml.v2"
@@ -22,7 +22,7 @@ import (
 
 var (
 	conf models.Config
-	db   *sqlx.DB
+	db   *ent.Client
 	s3   *minio.Client
 )
 
@@ -109,22 +109,27 @@ func initLogger(e *echo.Echo) {
 }
 
 func initDb(e *echo.Echo) {
-	var err error
-	connOption := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", conf.Host, conf.Port, conf.User, conf.Password, conf.Dbname)
-	db, err = sqlx.Open("postgres", connOption)
+	var (
+		err         error
+		connOptions []ent.Option
+	)
+
+	if e.Debug {
+		connOptions = append(connOptions, ent.Debug(), ent.Log(e.Logger.Info))
+	}
+
+	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", conf.Host, conf.Port, conf.User, conf.Password, conf.Dbname)
+	db, err = ent.Open("postgres", connStr, connOptions...)
 	if err != nil {
 		e.Logger.Fatal(err)
 	}
-	if err := db.Ping(); err != nil {
-		e.Logger.Fatal(err)
-	}
-
-	migrations := &migrate.HttpFileSystemMigrationSource{
-		FileSystem: pkger.Dir("/migrations"),
-	}
-
-	if _, err := migrate.Exec(db.DB, "postgres", migrations, migrate.Up); err != nil {
-		e.Logger.Fatalf("migrate err: %s", err)
+	// run the auto migration tool.
+	if err := db.Schema.Create(
+		context.Background(),
+		migrate.WithDropIndex(true),
+		migrate.WithDropColumn(true),
+	); err != nil {
+		e.Logger.Fatalf("failed creating schema resources: %v", err)
 	}
 }
 
@@ -152,60 +157,25 @@ func initS3(e *echo.Echo) {
 	setS3Policy(e, consts.S3PolicyAllowImageStatic)
 }
 
-// 检查图片资源是否公开
-func checkAndSetBucketPolicy(e *echo.Echo) {
-	p, err := s3.GetBucketPolicy(conf.Bucket)
+func initRole(e *echo.Echo) {
+	ctx := context.Background()
+	exist, err := db.Role.Query().Where(role.ID(1)).Exist(ctx)
 	if err != nil {
-		e.Logger.Fatalf("s3 get bucket policy err: %s", err)
+		e.Logger.Fatalf("init role error", err)
+	}
+	if exist {
 		return
 	}
-	if p == "" {
-		setS3Policy(e, consts.S3PolicyAllowImageStatic)
-		return
+	if _, err := db.Role.Create().SetName("默认角色").Save(ctx); err != nil {
+		e.Logger.Fatalf("init role error", err)
 	}
-
-	var policy models.S3Policy
-	if err := json.Unmarshal([]byte(p), &policy); err != nil {
-		e.Logger.Fatalf("s3 parse bucket policy err: %s", err)
-		return
-	}
-	if len(policy.Statement) > 0 {
-		for _, v := range policy.Statement {
-			if v.Sid == "AllowImageStatic" {
-				e.Logger.Info("s3 bucket policy checked ok")
-				return
-			}
-		}
-	}
-
-	var initPolicy models.S3Policy
-	if err := json.Unmarshal([]byte(consts.S3PolicyAllowImageStatic), &initPolicy); err != nil {
-		e.Logger.Fatalf("s3 parse init bucket policy err: %s", err)
-		return
-	}
-
-	policy.Statement = append(policy.Statement, initPolicy.Statement[0])
-
-	b, err := json.Marshal(&policy)
-	if err != nil {
-		e.Logger.Fatalf("s3 marshal new bucket policy err: %s", err)
-		return
-	}
-	setS3Policy(e, string(b))
-}
-
-func setS3Policy(e *echo.Echo, policy string) {
-	if err := s3.SetBucketPolicy(conf.Bucket, fmt.Sprintf(policy, conf.Bucket)); err != nil {
-		e.Logger.Fatalf("set s3 bucket policy err: %s", err)
-	}
-	e.Logger.Printf("successfully set bucket policy %s", conf.Bucket)
 }
 
 func GetConf() models.Config {
 	return conf
 }
 
-func GetDB() *sqlx.DB {
+func GetDB() *ent.Client {
 	return db
 }
 
@@ -219,4 +189,5 @@ func Init(e *echo.Echo) {
 	initLogger(e)
 	initS3(e)
 	initDb(e)
+	initRole(e)
 }

@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/fitzix/assassin/ent/app"
 )
 
 type AsnModel struct {
@@ -59,7 +61,7 @@ func NewPageReq() PageReq {
 
 type AppListReq struct {
 	Name string `query:"name"`
-	// Type  app.Type `query:"type"`
+	Type  app.Type `query:"type"`
 	Order string `query:"order"`
 	PageReq
 }
