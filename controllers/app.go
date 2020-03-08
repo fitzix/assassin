@@ -5,7 +5,7 @@ import (
 
 	"github.com/fitzix/assassin/models"
 	"github.com/fitzix/assassin/service"
-	"github.com/fitzix/assassin/utils/encrypt"
+	"github.com/fitzix/assassin/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"github.com/t-tiger/gorm-bulk-insert"
@@ -31,7 +31,7 @@ func AppList(c *gin.Context) {
 	}
 
 	if err := a.Page(db, &down, &total); err != nil {
-		a.Fail(service.StatusWebBadRequest, nil)
+		a.Fail(service.StatusBadRequest, nil)
 		return
 	}
 	a.SuccessWithPage(total, down)
@@ -45,7 +45,7 @@ func AppIndex(c *gin.Context) {
 		return db.Where("status = ?", true).Order("created_at DESC")
 	}).Preload("Versions.AppVersionDownloads").Preload("Carousels").Preload("Tags").Joins("LEFT JOIN app_hot ON app.id = app_hot.app_id").Where("app.status = ?", true).Find(&down, "app.id = ?", c.Param("id")).Error; err != nil {
 		a.L.Errorf("err %s", err)
-		a.Fail(service.StatusWebBadRequest, nil)
+		a.Fail(service.StatusBadRequest, nil)
 		return
 	}
 	a.Success(down)
@@ -78,7 +78,7 @@ func AppAuthorizedList(c *gin.Context) {
 	}
 
 	if err := a.Page(db, &down, &total); err != nil {
-		a.Fail(service.StatusWebBadRequest, nil)
+		a.Fail(service.StatusBadRequest, nil)
 		return
 	}
 	a.SuccessWithPage(total, down)
@@ -95,7 +95,7 @@ func AppAuthorizedIndex(c *gin.Context) {
 	if err := db.Find(&down, "app.id = ?", c.Param("id")).Error;
 		err != nil {
 		a.L.Errorf("err %s", err)
-		a.Fail(service.StatusWebBadRequest, nil)
+		a.Fail(service.StatusBadRequest, nil)
 		return
 	}
 	a.Success(down)
@@ -105,7 +105,7 @@ func AppCreate(c *gin.Context) {
 	a := service.NewAsnGin(c)
 	var up service.App
 	if err := c.BindJSON(&up); err != nil {
-		a.Fail(service.StatusWebParamErr, err)
+		a.Fail(service.StatusParamErr, err)
 		return
 	}
 
@@ -115,17 +115,17 @@ func AppCreate(c *gin.Context) {
 		up.Carousels = up.Carousels[1:]
 	}
 
-	up.ID = encrypt.GetNanoId()
+	up.ID = utils.GenNanoId()
 
 	if err := a.D.Omit("View", "Hot").Create(&up).Error; err != nil {
-		a.Fail(service.StatusWebBadRequest, err)
+		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 
 	// create desc file to github
-	go func(id string) {
-		_, _ = service.GetGithubClient().CreateMdFile(id, service.AsnUploadTypeApp)
-	}(up.ID)
+	// go func(id string) {
+	// 	_, _ = service.GetGithubClient().CreateMdFile(id, service.AsnUploadTypeApp)
+	// }(up.ID)
 
 	a.Success(up)
 }
@@ -134,7 +134,7 @@ func AppUpdate(c *gin.Context) {
 	var up service.App
 
 	if err := c.BindJSON(&up); err != nil {
-		a.Fail(service.StatusWebParamErr, err)
+		a.Fail(service.StatusParamErr, err)
 		return
 	}
 	up.ID = c.Param("id")
@@ -145,7 +145,7 @@ func AppUpdate(c *gin.Context) {
 	}
 
 	if err := a.D.Model(&up).Select("", up.CouldUpdateColumns()...).Updates(up).Error; err != nil {
-		a.Fail(service.StatusWebBadRequest, err)
+		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 	a.Success(up)
@@ -155,7 +155,7 @@ func AppTags(c *gin.Context) {
 	a := service.NewAsnGin(c)
 	var down []models.AppTag
 	if err := a.D.Where("app_id = ?", c.Param("id")).Find(&down).Error; err != nil {
-		a.Fail(service.StatusWebBadRequest, err)
+		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 	a.Success(down)
@@ -165,7 +165,7 @@ func AppTagsCreateOrUpdate(c *gin.Context) {
 	a := service.NewAsnGin(c)
 	var up []uint
 	if err := c.BindJSON(&up); err != nil {
-		a.Fail(service.StatusWebParamErr, err)
+		a.Fail(service.StatusParamErr, err)
 		return
 	}
 
@@ -173,7 +173,7 @@ func AppTagsCreateOrUpdate(c *gin.Context) {
 
 	if err := tx.Delete(&models.AppTag{}, "app_id IN ( ? )", up).Error; err != nil {
 		tx.Rollback()
-		a.Fail(service.StatusWebBadRequest, err)
+		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 
@@ -188,7 +188,7 @@ func AppTagsCreateOrUpdate(c *gin.Context) {
 
 	if err := gormbulk.BulkInsert(tx, insertRecords, 3000); err != nil {
 		tx.Rollback()
-		a.Fail(service.StatusWebBadRequest, err)
+		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 	tx.Commit()

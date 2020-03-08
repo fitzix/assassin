@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go/v4"
 	"github.com/fitzix/assassin/models"
 )
 
@@ -16,7 +16,7 @@ func GenJwt(t models.Token, conf models.Jwt) (string, error) {
 	claims := &models.JwtClaims{
 		Token: t,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * time.Duration(conf.Expires)).Unix(),
+			ExpiresAt: jwt.At(time.Now().Add(time.Hour * time.Duration(conf.Expires))),
 			Issuer:    conf.Issuer,
 		},
 	}

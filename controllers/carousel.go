@@ -11,7 +11,7 @@ func CarouseList(c *gin.Context) {
 	a := service.NewAsnGin(c)
 	var down []models.AppCarousel
 	if err := a.D.Where("app_id = ?", c.Param("id")).Find(&down).Error; err != nil {
-		a.Fail(service.StatusWebBadRequest, err)
+		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 	a.Success(down)
@@ -22,7 +22,7 @@ func CarouselCreate(c *gin.Context) {
 	var up []string
 	var insertRecords []interface{}
 	if err := c.BindJSON(&up); err != nil {
-		a.Fail(service.StatusWebParamErr, err)
+		a.Fail(service.StatusParamErr, err)
 		return
 	}
 
@@ -34,7 +34,7 @@ func CarouselCreate(c *gin.Context) {
 	}
 
 	if err := gormbulk.BulkInsert(a.D, insertRecords, 3000); err != nil {
-		a.Fail(service.StatusWebBadRequest, err)
+		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 
@@ -44,8 +44,23 @@ func CarouselCreate(c *gin.Context) {
 func CarouselDelete(c *gin.Context) {
 	a := service.NewAsnGin(c)
 	if err := a.D.Delete(&models.AppCarousel{}, "id = ?", c.Param("cid")).Error; err != nil {
-		a.Fail(service.StatusWebBadRequest, err)
+		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 	a.Success(nil)
+}
+
+func Upload(c *gin.Context) {
+	a := service.NewAsnGin(c)
+	file, err := c.FormFile("file")
+	if err != nil {
+		a.Fail(service.StatusParamErr, err)
+		return
+	}
+	url, err := service.PutImage(file)
+	if err != nil {
+		a.Fail(service.StatusBadRequest, err)
+		return
+	}
+	a.Success(url)
 }

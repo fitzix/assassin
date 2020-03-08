@@ -18,7 +18,7 @@ func CategoryList(c *gin.Context) {
 	a := service.NewAsnGin(c)
 	var down []models.Category
 	if err := a.D.Find(&down).Error; err != nil {
-		a.Fail(service.StatusWebBadRequest, err)
+		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 	a.Success(down)

@@ -2,28 +2,35 @@ package service
 
 import (
 	"bytes"
-	"context"
 	"fmt"
+	"log"
+	"os"
 	"strings"
 
 	"github.com/fitzix/assassin/consts"
-	"github.com/fitzix/assassin/ent"
-	"github.com/fitzix/assassin/ent/migrate"
-	"github.com/fitzix/assassin/ent/role"
 	"github.com/fitzix/assassin/models"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
+	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
+	"github.com/markbates/pkger"
 	"github.com/minio/minio-go/v6"
+	"github.com/rubenv/sql-migrate"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
+type asnLogger struct {
+	*zap.SugaredLogger
+}
+
 var (
-	conf models.Config
-	db   *ent.Client
-	s3   *minio.Client
+	conf   models.Config
+	logger *asnLogger
+	db     *gorm.DB
+	s3     *minio.Client
 )
 
 func initConf() {
@@ -79,20 +86,11 @@ func initConf() {
 	}
 }
 
-func initEcho(e *echo.Echo) {
-	if conf.Mod == "dev" {
-		e.Debug = true
-		e.Logger.SetLevel(log.DEBUG)
-		e.Logger.SetHeader("${time_rfc3339} ${level} ${prefix} ${short_file} ${line}")
-	}
-	e.Validator = models.NewValidator()
+func (l *asnLogger) Print(v ...interface{}) {
+	l.Info(v...)
 }
 
-func initLogger(e *echo.Echo) {
-	if e.Debug {
-		return
-	}
-
+func initLogger() {
 	hook := lumberjack.Logger{
 		Filename: "logs/app.log",
 		// 每个日志文件保存的最大尺寸 单位：M
@@ -105,77 +103,83 @@ func initLogger(e *echo.Echo) {
 		Compress: true,
 	}
 
-	e.Logger.SetOutput(&hook)
-}
+	encoderConfig := zap.NewProductionEncoderConfig()
+	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 
-func initDb(e *echo.Echo) {
-	var (
-		err         error
-		connOptions []ent.Option
-	)
+	var core zapcore.Core
 
-	if e.Debug {
-		connOptions = append(connOptions, ent.Debug(), ent.Log(e.Logger.Info))
+	if gin.Mode() == gin.ReleaseMode {
+		core = zapcore.NewCore(
+			zapcore.NewJSONEncoder(encoderConfig),
+			zapcore.AddSync(&hook),
+			zap.InfoLevel,
+		)
+	} else {
+		core = zapcore.NewCore(
+			zapcore.NewConsoleEncoder(encoderConfig),
+			zapcore.AddSync(os.Stdout),
+			zap.InfoLevel,
+		)
 	}
 
+	logger = &asnLogger{
+		SugaredLogger: zap.New(core, zap.AddStacktrace(zapcore.ErrorLevel), zap.AddCaller()).Sugar(),
+	}
+}
+
+func initDb() {
+	var err error
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", conf.Host, conf.Port, conf.User, conf.Password, conf.Dbname)
-	db, err = ent.Open("postgres", connStr, connOptions...)
+	db, err = gorm.Open("postgres", connStr)
 	if err != nil {
-		e.Logger.Fatal(err)
+		logger.Fatal(err)
 	}
-	// run the auto migration tool.
-	if err := db.Schema.Create(
-		context.Background(),
-		migrate.WithDropIndex(true),
-		migrate.WithDropColumn(true),
-	); err != nil {
-		e.Logger.Fatalf("failed creating schema resources: %v", err)
+	db.SetLogger(logger)
+	db.LogMode(true)
+	if gin.Mode() == gin.ReleaseMode {
+		db.LogMode(false)
+	}
+	migrations := &migrate.HttpFileSystemMigrationSource{
+		FileSystem: pkger.Dir("/migrations"),
+	}
+	if _, err := migrate.Exec(db.DB(), "postgres", migrations, migrate.Up); err != nil {
+		logger.Fatalf("migrate err: %s", err)
 	}
 }
 
-func initS3(e *echo.Echo) {
+func initS3() {
 	var err error
 	s3, err = minio.New(conf.Endpoint, conf.AccessKeyID, conf.SecretAccessKey, conf.UseSSL)
 	if err != nil {
-		e.Logger.Fatalf("connect minio file server err: %s", err)
+		logger.Fatalf("connect minio file server err: %s", err)
 	}
 	// check bucket exist
 	exist, err := s3.BucketExists(conf.Bucket)
 	if err != nil {
-		e.Logger.Fatalf("check minio bucket err: %s", err)
+		logger.Fatalf("check minio bucket err: %s", err)
 	}
 	if exist {
-		e.Logger.Info("minio bucket check ok")
-		checkAndSetBucketPolicy(e)
+		logger.Info("minio bucket check ok")
+		checkAndSetBucketPolicy()
 		return
 	}
 
 	if err := s3.MakeBucket(conf.Bucket, "ap-east-1"); err != nil {
-		e.Logger.Fatalf("create minio bucket err: %s", err)
+		logger.Fatalf("create minio bucket err: %s", err)
 	}
 
-	setS3Policy(e, consts.S3PolicyAllowImageStatic)
-}
-
-func initRole(e *echo.Echo) {
-	ctx := context.Background()
-	exist, err := db.Role.Query().Where(role.ID(1)).Exist(ctx)
-	if err != nil {
-		e.Logger.Fatalf("init role error", err)
-	}
-	if exist {
-		return
-	}
-	if _, err := db.Role.Create().SetName("默认角色").Save(ctx); err != nil {
-		e.Logger.Fatalf("init role error", err)
-	}
+	setS3Policy(consts.S3PolicyAllowImageStatic)
 }
 
 func GetConf() models.Config {
 	return conf
 }
 
-func GetDB() *ent.Client {
+func GetLogger() *zap.SugaredLogger {
+	return logger.SugaredLogger
+}
+
+func GetDB() *gorm.DB {
 	return db
 }
 
@@ -183,11 +187,9 @@ func GetS3() *minio.Client {
 	return s3
 }
 
-func Init(e *echo.Echo) {
+func Init() {
 	initConf()
-	initEcho(e)
-	initLogger(e)
-	initS3(e)
-	initDb(e)
-	initRole(e)
+	initLogger()
+	initS3()
+	initDb()
 }

@@ -1,9 +1,9 @@
 package models
 
-import "github.com/dgrijalva/jwt-go"
+import "github.com/dgrijalva/jwt-go/v4"
 
 type Token struct {
-	Uid int `json:"uid"`
+	Uid string `json:"uid"`
 	// TODO 用于踢出用户
 	Code uint `json:"code"`
 }

@@ -13,7 +13,7 @@ func AppVersion(c *gin.Context) {
 	var down []models.AppVersion
 
 	if err := a.D.Where("app_id = ?", c.Param("id")).Find(&down).Error; err != nil {
-		a.Fail(service.StatusWebBadRequest, err)
+		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 
@@ -25,7 +25,7 @@ func VersionCreate(c *gin.Context) {
 	var up service.AppVersion
 
 	if err := c.ShouldBind(&up); err != nil {
-		a.Fail(service.StatusWebParamErr, err)
+		a.Fail(service.StatusParamErr, err)
 		return
 	}
 	up.AppId = c.Param("id")
@@ -33,12 +33,12 @@ func VersionCreate(c *gin.Context) {
 	tx := a.D.Begin()
 	if err := tx.Create(&up).Error; err != nil {
 		tx.Rollback()
-		a.Fail(service.StatusWebBadRequest, err)
+		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 	if err := tx.Model(&models.App{}).Where("id = ?", up.AppId).Update("version_at", time.Now()).Error; err != nil {
 		tx.Rollback()
-		a.Fail(service.StatusWebBadRequest, err)
+		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 	tx.Commit()
@@ -51,12 +51,12 @@ func VersionUpdate(c *gin.Context) {
 	var up service.AppVersion
 
 	if err := c.BindJSON(&up); err != nil {
-		a.Fail(service.StatusWebParamErr, err)
+		a.Fail(service.StatusParamErr, err)
 		return
 	}
 
 	if err := a.D.Save(&up).Error; err != nil {
-		a.Fail(service.StatusWebBadRequest, err)
+		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 
@@ -67,7 +67,7 @@ func DownloadList(c *gin.Context) {
 	a := service.NewAsnGin(c)
 	var down []models.Download
 	if err := a.D.Find(&down).Error; err != nil {
-		a.Fail(service.StatusWebBadRequest, err)
+		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 	a.Success(down)

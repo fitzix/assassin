@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func Zap(logger *zap.Logger) gin.HandlerFunc {
+func Zap(logger *zap.SugaredLogger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		// some evil middlewares modify this values
@@ -32,15 +32,16 @@ func Zap(logger *zap.Logger) gin.HandlerFunc {
 				logger.Error(e)
 			}
 		} else {
-			logger.Info(path,
-				zap.Int("status", c.Writer.Status()),
-				zap.String("method", c.Request.Method),
-				zap.String("path", path),
-				zap.String("query", query),
-				zap.String("ip", c.ClientIP()),
-				zap.String("user-agent", c.Request.UserAgent()),
-				zap.String("time", end.Format(time.RFC3339)),
-				zap.Duration("latency", latency),
+			logger.Info(
+				path,
+				"status", c.Writer.Status(),
+				"method", c.Request.Method,
+				"path", path,
+				"query", query,
+				"ip", c.ClientIP(),
+				"user-agent", c.Request.UserAgent(),
+				"time", end.Format(time.RFC3339),
+				"latency", latency,
 			)
 		}
 	}
@@ -51,7 +52,7 @@ func Zap(logger *zap.Logger) gin.HandlerFunc {
 // All errors are logged using zap.Error().
 // stack means whether output the stack info.
 // The stack info is easy to find where the error occurs but the stack info is too large.
-func ZapRecovery(logger *zap.Logger, stack bool) gin.HandlerFunc {
+func ZapRecovery(logger *zap.SugaredLogger, stack bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -69,8 +70,8 @@ func ZapRecovery(logger *zap.Logger, stack bool) gin.HandlerFunc {
 				httpRequest, _ := httputil.DumpRequest(c.Request, false)
 				if brokenPipe {
 					logger.Error(c.Request.URL.Path,
-						zap.String("error", err.(string)),
-						zap.String("request", string(httpRequest)),
+						"error", err.(string),
+						"request", string(httpRequest),
 					)
 					// If the connection is dead, we can't write a status to it.
 					_ = c.Error(err.(error))
@@ -80,16 +81,16 @@ func ZapRecovery(logger *zap.Logger, stack bool) gin.HandlerFunc {
 
 				if stack {
 					logger.Error("[Recovery from panic]",
-						zap.Time("time", time.Now()),
-						zap.String("error", err.(string)),
-						zap.String("request", string(httpRequest)),
-						zap.String("stack", string(debug.Stack())),
+						"time", time.Now(),
+						"error", err.(string),
+						"request", string(httpRequest),
+						"stack", string(debug.Stack()),
 					)
 				} else {
 					logger.Error("[Recovery from panic]",
-						zap.Time("time", time.Now()),
-						zap.String("error", err.(string)),
-						zap.String("request", string(httpRequest)),
+						"time", time.Now(),
+						"error", err.(string),
+						"request", string(httpRequest),
 					)
 				}
 				c.AbortWithStatus(http.StatusInternalServerError)

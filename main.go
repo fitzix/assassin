@@ -1,26 +1,23 @@
 package main
 
 import (
-	"log"
-
 	"github.com/fitzix/assassin/middlewares"
 	"github.com/fitzix/assassin/router"
 	"github.com/fitzix/assassin/service"
 	"github.com/gin-gonic/gin"
 )
 
-func init() {
-	service.InitProject()
-}
-
 func main() {
+	service.Init()
+
 	r := gin.New()
+	r.Use(middlewares.ZapRecovery(service.GetLogger(), true))
+	r.Use(middlewares.Zap(service.GetLogger()))
+	r.Use(middlewares.CORS())
 
-	r.Use(middlewares.Cors())
-
-	router.InitRouter(r)
+	router.Route(r)
 
 	if err := r.Run(); err != nil {
-		log.Fatal(err)
+		service.GetLogger().Fatal(err)
 	}
 }

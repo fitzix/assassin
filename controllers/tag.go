@@ -10,7 +10,7 @@ func TagList(c *gin.Context) {
 	a := service.NewAsnGin(c)
 	var down []models.Tag
 	if err := a.D.Find(&down).Error; err != nil {
-		a.Fail(service.StatusWebBadRequest, err)
+		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 	a.Success(down)
@@ -22,12 +22,12 @@ func TagCreate(c *gin.Context) {
 	a := service.NewAsnGin(c)
 	var up models.Tag
 	if err := c.ShouldBindJSON(&up); err != nil {
-		a.Fail(service.StatusWebParamErr, err)
+		a.Fail(service.StatusParamErr, err)
 		return
 	}
 
 	if err := a.D.Create(&up).Error; err != nil {
-		a.Fail(service.StatusWebBadRequest, err)
+		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 
