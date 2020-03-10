@@ -1,0 +1,23 @@
+pkgname: schema
+output: schema
+no-context: true
+no-hooks: true
+no-tests: true
+struct-tag-casing: camel
+wipe: true
+tag-ignore:
+  - user.password
+  - user.code
+  - user.status
+  - app.hot_id
+  - app.deleted_at
+  - hot.id
+psql:
+  dbname: assassin-ent
+  host: 127.0.0.1
+  port: 5432
+  user: fitz
+  pass: 131833
+  sslmode: disable
+  blacklist:
+    - gorp_migrations

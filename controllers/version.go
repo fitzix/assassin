@@ -10,7 +10,7 @@ import (
 
 func AppVersion(c *gin.Context) {
 	a := service.NewAsnGin(c)
-	var down []models.AppVersion
+	var down []models.Version
 
 	if err := a.D.Where("app_id = ?", c.Param("id")).Find(&down).Error; err != nil {
 		a.Fail(service.StatusBadRequest, err)
@@ -65,7 +65,7 @@ func VersionUpdate(c *gin.Context) {
 
 func DownloadList(c *gin.Context) {
 	a := service.NewAsnGin(c)
-	var down []models.Download
+	var down []models.Provider
 	if err := a.D.Find(&down).Error; err != nil {
 		a.Fail(service.StatusBadRequest, err)
 		return

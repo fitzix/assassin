@@ -32,7 +32,7 @@ func Zap(logger *zap.SugaredLogger) gin.HandlerFunc {
 				logger.Error(e)
 			}
 		} else {
-			logger.Info(
+			logger.Infow(
 				path,
 				"status", c.Writer.Status(),
 				"method", c.Request.Method,
@@ -80,14 +80,14 @@ func ZapRecovery(logger *zap.SugaredLogger, stack bool) gin.HandlerFunc {
 				}
 
 				if stack {
-					logger.Error("[Recovery from panic]",
+					logger.Errorw("[Recovery from panic]",
 						"time", time.Now(),
 						"error", err.(string),
 						"request", string(httpRequest),
 						"stack", string(debug.Stack()),
 					)
 				} else {
-					logger.Error("[Recovery from panic]",
+					logger.Errorw("[Recovery from panic]",
 						"time", time.Now(),
 						"error", err.(string),
 						"request", string(httpRequest),

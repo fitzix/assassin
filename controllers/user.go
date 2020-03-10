@@ -15,10 +15,10 @@ func UserLogin(c *gin.Context) {
 		return
 	}
 	var user models.User
-	if err := a.D.Take(&user, "name = ?", up.UserName).Error; err != nil {
-		a.Fail(service.StatusUserNotExist, err)
-		return
-	}
+	// if err := a.Db.Get(&user, `SELECT * FROM "user" WHERE "name" = $1`, up.UserName); err != nil {
+	// 	a.Fail(service.StatusUserNotExist, err)
+	// 	return
+	// }
 
 	if !utils.CheckPass(user.Password, up.Password) {
 		a.Fail(service.StatusUserWrongPwd, nil)
@@ -59,9 +59,15 @@ func UserCreate(c *gin.Context) {
 		Password: string(encPwd),
 		RoleId:   1,
 	}
-	if err := a.D.Create(&user).Error; err != nil {
-		a.Fail(service.StatusBadRequest, err)
-		return
-	}
+	// if _, err := a.Db.Exec(
+	// 	`INSERT INTO "user" ("uid","name","password","role_id") VALUES ($1,$2,$3,$4)`,
+	// 	user.UID,
+	// 	user.Name,
+	// 	user.Password,
+	// 	user.RoleId,
+	// ); err != nil {
+	// 	a.Fail(service.StatusBadRequest, err)
+	// 	return
+	// }
 	a.Success(user)
 }

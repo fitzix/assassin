@@ -1,31 +1,32 @@
 package service
 
 const (
-	AsnAppTypeApp = iota // app 类型
-	AsnAppTypeBook
-
-	AsnAppStatusUnPublish = iota
-	AsnAppStatusPublish
-
-	AsnAppOrderNew = iota
+	AsnAppTypeApp         = 0
+	AsnAppTypeBook        = 1
+	AsnAppStatusUnPublish = 0
+	AsnAppStatusPublish   = 1
 	AsnAppOrderHot
-
-	AsnUploadTypeApp = iota
+	AsnUploadTypeApp
 	AsnUploadTypeArticle
 )
 
 var appTypeName = map[string]int{
-	"app":   AsnAppTypeApp,
-	"book":  AsnAppTypeBook,
-	"hot":   AsnAppOrderHot,
-	"new":   AsnAppOrderNew,
-	"pub":   AsnAppStatusPublish,
-	"unpub": AsnAppStatusUnPublish,
+	"app":   AsnAppTypeApp,         // app类型 app
+	"book":  AsnAppTypeBook,        // 书籍
+	"hot":   AsnAppOrderHot,        // 排序 热度
+	"pub":   AsnAppStatusPublish,   // app 状态 发布
+	"unpub": AsnAppStatusUnPublish, // 未发布
+}
+
+func AsnTypeExist(t string) (exist bool) {
+	_, exist = appTypeName[t]
+	return
 }
 
 func AsnType(t string) int {
-	if typeCode, ok := appTypeName[t]; ok {
-		return typeCode
+	rsp, ok := appTypeName[t]
+	if ok {
+		return rsp
 	}
 	return -1
 }

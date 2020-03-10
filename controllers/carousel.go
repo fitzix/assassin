@@ -9,7 +9,7 @@ import (
 
 func CarouseList(c *gin.Context) {
 	a := service.NewAsnGin(c)
-	var down []models.AppCarousel
+	var down []models.Carousel
 	if err := a.D.Where("app_id = ?", c.Param("id")).Find(&down).Error; err != nil {
 		a.Fail(service.StatusBadRequest, err)
 		return
@@ -27,7 +27,7 @@ func CarouselCreate(c *gin.Context) {
 	}
 
 	for _, v := range up {
-		insertRecords = append(insertRecords, models.AppCarousel{
+		insertRecords = append(insertRecords, models.Carousel{
 			AppId: c.Param("id"),
 			Url:   v,
 		})
@@ -43,7 +43,7 @@ func CarouselCreate(c *gin.Context) {
 
 func CarouselDelete(c *gin.Context) {
 	a := service.NewAsnGin(c)
-	if err := a.D.Delete(&models.AppCarousel{}, "id = ?", c.Param("cid")).Error; err != nil {
+	if err := a.D.Delete(&models.Carousel{}, "id = ?", c.Param("cid")).Error; err != nil {
 		a.Fail(service.StatusBadRequest, err)
 		return
 	}

@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type AppVersion struct {
+type Version struct {
 	ID        int       `json:"id"`
 	Name      string    `json:"name" binding:"required"`
 	AppId     string    `json:"appId"`
@@ -13,15 +13,4 @@ type AppVersion struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-type Download struct {
-	ID   uint   `json:"id"`
-	Name string `json:"name"`
-}
 
-type AppVersionDownload struct {
-	ID           int    `json:"id"`
-	AppVersionId int    `json:"appVersionId"`
-	DownloadId   int    `json:"downloadId"`
-	Url          string `json:"url"`
-	Secret       string `json:"secret"`
-}

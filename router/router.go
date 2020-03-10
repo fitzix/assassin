@@ -11,9 +11,6 @@ func Route(r *gin.Engine) {
 
 	auth := v1.Group("").Use(middlewares.JWT())
 	{
-		// user
-		auth.POST("/users", controllers.UserCreate)
-
 		// app
 		auth.POST("/apps", controllers.AppCreate)
 		auth.PUT("/apps/:id", controllers.AppUpdate)
@@ -39,6 +36,7 @@ func Route(r *gin.Engine) {
 	{
 		// user
 		public.POST("/login", controllers.UserLogin)
+		auth.POST("/users", controllers.UserCreate)
 
 		// app
 		public.GET("/apps", controllers.AppList)

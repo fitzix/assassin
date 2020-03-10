@@ -2,20 +2,22 @@ package service
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/fitzix/assassin/consts"
 	"github.com/fitzix/assassin/models"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
 	"github.com/markbates/pkger"
 	"github.com/minio/minio-go/v6"
 	"github.com/rubenv/sql-migrate"
 	"github.com/spf13/viper"
+	"github.com/volatiletech/sqlboiler/boil"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -29,7 +31,7 @@ type asnLogger struct {
 var (
 	conf   models.Config
 	logger *asnLogger
-	db     *gorm.DB
+	db     *sql.DB
 	s3     *minio.Client
 )
 
@@ -123,26 +125,30 @@ func initLogger() {
 	}
 
 	logger = &asnLogger{
-		SugaredLogger: zap.New(core, zap.AddStacktrace(zapcore.ErrorLevel), zap.AddCaller()).Sugar(),
+		SugaredLogger: zap.New(core, zap.AddStacktrace(zapcore.ErrorLevel), zap.AddCaller(), zap.AddCallerSkip(1)).Sugar(),
 	}
 }
 
 func initDb() {
 	var err error
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", conf.Host, conf.Port, conf.User, conf.Password, conf.Dbname)
-	db, err = gorm.Open("postgres", connStr)
+	db, err = sql.Open("postgres", connStr)
 	if err != nil {
 		logger.Fatal(err)
 	}
-	db.SetLogger(logger)
-	db.LogMode(true)
-	if gin.Mode() == gin.ReleaseMode {
-		db.LogMode(false)
+	if err := db.Ping(); err != nil {
+		logger.Fatal(err)
 	}
+	if gin.IsDebugging() {
+		boil.DebugMode = true
+	}
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(25)
+	db.SetConnMaxLifetime(5 * time.Minute)
 	migrations := &migrate.HttpFileSystemMigrationSource{
 		FileSystem: pkger.Dir("/migrations"),
 	}
-	if _, err := migrate.Exec(db.DB(), "postgres", migrations, migrate.Up); err != nil {
+	if _, err := migrate.Exec(db, "postgres", migrations, migrate.Up); err != nil {
 		logger.Fatalf("migrate err: %s", err)
 	}
 }
@@ -179,7 +185,7 @@ func GetLogger() *zap.SugaredLogger {
 	return logger.SugaredLogger
 }
 
-func GetDB() *gorm.DB {
+func GetDB() *sql.DB {
 	return db
 }
 
@@ -190,6 +196,6 @@ func GetS3() *minio.Client {
 func Init() {
 	initConf()
 	initLogger()
-	initS3()
+	// initS3()
 	initDb()
 }

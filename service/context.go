@@ -1,8 +1,8 @@
 package service
 
 import (
+	"database/sql"
 	"net/http"
-	"strconv"
 
 	"github.com/fitzix/assassin/models"
 	"github.com/gin-gonic/gin"
@@ -10,41 +10,37 @@ import (
 )
 
 type AsnGin struct {
-	C *gin.Context
-	D *gorm.DB
-	L *asnLogger
+	C  *gin.Context
+	D  *gorm.DB
+	Db *sql.DB
+	L  *asnLogger
 }
 
 func NewAsnGin(c *gin.Context) *AsnGin {
 	return &AsnGin{
-		C: c,
-		D: db,
-		L: logger,
+		C:  c,
+		Db: db,
+		L:  logger,
 	}
 }
 
-func (a *AsnGin) Page(query *gorm.DB, data interface{}, count interface{}) error {
-	size, err := strconv.Atoi(a.C.Query("page_size"))
-	if err != nil {
-		size = 20
-	}
-	num, err := strconv.Atoi(a.C.Query("page_num"))
-	if err != nil {
-		num = 1
-	}
-
-	if err := query.Model(data).Count(count).Error; err != nil {
-		return err
-	}
-	if err := query.Limit(size).Offset(size * (num - 1)).Find(data).Error; err != nil {
-		return err
-	}
+func (a *AsnGin) Page(stmt interface{}, page models.PageReq, count *int, dest interface{}) error {
+	// query := stmt.Column
+	// stmt.Column = []interface{}{"COUNT (*)"}
+	// if err := stmt.LoadOne(count); err != nil {
+	// 	return err
+	// }
+	//
+	// stmt.Column = query
+	// stmt.Offset(uint64(page.PerPage * (page.Page - 1))).Limit(uint64(page.PerPage))
+	// _, err := stmt.Load(dest)
+	// return err
 	return nil
 }
 
-func (a *AsnGin) GetToken() Token {
+func (a *AsnGin) GetToken() models.Token {
 	token, _ := a.C.Get("token")
-	return *token.(*Token)
+	return *token.(*models.Token)
 }
 
 func (a *AsnGin) IsAuth() bool {
@@ -65,14 +61,14 @@ func (a *AsnGin) Success(data interface{}) {
 	a.Response(0, data)
 }
 
-func (a *AsnGin) SuccessWithPage(total int, data interface{}) {
-	a.Success(models.PageDown{
+func (a *AsnGin) Fail(code int, err error) {
+	a.L.Warnf("response err code: %d err: %s", code, err)
+	a.Response(code, nil)
+}
+
+func (a *AsnGin) SuccessWithPage(total int64, data interface{}) {
+	a.Response(0, models.PageRsp{
 		Total: total,
 		Info:  data,
 	})
-}
-
-func (a *AsnGin) Fail(code int, err error) {
-	a.L.Warnf("response err, code: %d, err: %s", code, err)
-	a.Response(code, nil)
 }

@@ -6,17 +6,17 @@ const (
 	tmplArticle = ``
 )
 
-var tmpl = map[int]string{
-	AsnUploadTypeApp: tmplAppDesc,
-	AsnUploadTypeArticle: tmplArticle,
-}
-
-func GetTmplContent(t int) []byte {
-	if content, ok := tmpl[t]; ok {
-		return []byte(content)
-	}
-	return []byte{}
-}
+// var tmpl = map[int]string{
+// 	AsnUploadTypeApp: tmplAppDesc,
+// 	AsnUploadTypeArticle: tmplArticle,
+// }
+//
+// func GetTmplContent(t int) []byte {
+// 	if content, ok := tmpl[t]; ok {
+// 		return []byte(content)
+// 	}
+// 	return []byte{}
+// }
 
 // func GetTmplContent(t int, data interface{}) []byte {
 // 	tmplText := "> 应用介绍"

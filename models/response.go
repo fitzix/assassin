@@ -6,7 +6,12 @@ type Response struct {
 	Data interface{} `json:"data"`
 }
 
-type PageDown struct {
-	Total int         `json:"total"`
+type PageReq struct {
+	Page    int `json:"page" form:"page,default=1"`
+	PerPage int `json:"perPage" form:"perPage,default=20"`
+}
+
+type PageRsp struct {
+	Total int64       `json:"total"`
 	Info  interface{} `json:"info"`
 }
