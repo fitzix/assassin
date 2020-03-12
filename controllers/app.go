@@ -1,20 +1,21 @@
 package controllers
 
 import (
+	"context"
 	"fmt"
-	"strconv"
 
+	"github.com/fitzix/assassin/ent"
+	"github.com/fitzix/assassin/ent/app"
+	"github.com/fitzix/assassin/ent/version"
 	"github.com/fitzix/assassin/models"
-	"github.com/fitzix/assassin/schema"
 	"github.com/fitzix/assassin/service"
 	"github.com/fitzix/assassin/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"github.com/t-tiger/gorm-bulk-insert"
-	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
-func appList(c *gin.Context, isAuth bool) {
+func AppList(c *gin.Context) {
 	a := service.NewAsnGin(c)
 	var req models.AppListReq
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -22,99 +23,81 @@ func appList(c *gin.Context, isAuth bool) {
 		return
 	}
 
-	if !isAuth {
-		req.Status = "pub"
+	// 查询未发布
+	if service.AsnType(req.Status) < 1 {
+		// 未授权 只能查询已发布
+		if !a.IsAuth() {
+			req.Status = "pub"
+		}
 	}
-	var query []qm.QueryMod
+
+	if service.AsnType(req.Order) > 0 {
+		appListHot(a, req)
+		return
+	}
+
+	query := a.Db.App.Query()
+
 	if req.Name != "" {
-		query = append(query, qm.Where("app.name LIKE ?", fmt.Sprintf("%%%s%%", req.Name)))
+		query.Where(app.NameContains(fmt.Sprintf("%%%s%%", req.Name)))
 	}
 
 	if t := service.AsnType(req.Type); t > -1 {
-		query = append(query, qm.Where("app.type = ?", t))
+		query.Where(app.TypeEQ(t))
 	}
 
-	if status := service.AsnType(req.Status); status > -1 {
-		query = append(query, qm.Where("app.status = ?", strconv.Itoa(status)))
+	if t := service.AsnType(req.Status); t > -1 {
+		query.Where(app.TypeEQ(t))
 	}
-	total, err := schema.Apps(query...).Count(a.Db)
+	ctx := context.Background()
+	total, err := query.Count(ctx)
 	if err != nil {
 		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 
-	if service.AsnTypeExist(req.Order) {
-		query = append(query, qm.OrderBy("hot.hot DESC"), qm.LeftOuterJoin("hot ON app.hot_id = hot.id"))
-	} else {
-		qm.OrderBy("app.update_at DESC")
-	}
-
-	apps, err := schema.Apps(append(query, qm.Load(schema.AppRels.Hot), qm.Load(schema.AppRels.Tags))...).All(a.Db)
+	apps, err := query.Order(ent.Desc(app.FieldUpdatedAt)).WithHot().WithCategories().All(ctx)
 	if err != nil {
 		a.Fail(service.StatusBadRequest, err)
 		return
 	}
-	var rsp []models.AppCover
-	for _, app := range apps {
-		rsp = append(rsp, models.AppCover{
-			App:  app,
-			Hot:  app.R.Hot,
-			Tags: app.R.Tags,
-		})
-	}
-
-	a.SuccessWithPage(total, rsp)
+	a.SuccessWithPage(total, apps)
 }
 
-func appIndex(c *gin.Context, isAuth bool) {
-	a := service.NewAsnGin(c)
-	var rsp models.AppIndex
-	db := a.D.Select("app.*, app_hot.*")
-	// if !isAuth {
-	// 	db = db.Where()
-	// }
-	err := db.
-		Preload("Versions", func(db *gorm.DB) *gorm.DB {
-			if !isAuth {
-				db = db.Where("status = ?", true)
-			}
-			return db.Order("created_at DESC")
-		}).
-		Preload("Versions.AppVersionDownloads").
-		Preload("Carousels").
-		Preload("Tags").
-		Joins("LEFT JOIN app_hot ON app.id = app_hot.app_id").
-		Where("app.status = ?", true).
-		Find(&rsp, "app.id = ? AND ", c.Param("id")).Error
-	if err != nil {
+func appListHot(a *service.AsnGin, req models.AppListReq) {
+	var rsp models.AppListRsp
+	if err := service.GetSqlDB().QueryRow(`SELECT count(*) FROM "app" WHERE "app"."type" = $1 AND "app"."status" = $2`, service.AsnType(req.Type), service.AsnAppStatusPublish).Scan(&rsp.Total); err != nil {
 		a.Fail(service.StatusBadRequest, err)
 		return
 	}
-	a.Success(rsp)
-}
-
-func AppList(c *gin.Context) {
-	appList(c, false)
-}
-
-// AppAuthorizedList need auth
-func AppAuthorizedList(c *gin.Context) {
-	appList(c, true)
+	service.GetSqlDB().Query(`SELECT * FROM "app" LEFT JOIN "hot" ON "app"."id" = "hot"."app_id" WHERE "app"."type" = $1 AND "app"."status" = $2 `, service.AsnType(req.Type), service.AsnAppStatusPublish)
 }
 
 func AppIndex(c *gin.Context) {
 	a := service.NewAsnGin(c)
-	var rsp models.AppIndex
-	err := a.D.
-		Select("app.*, app_hot.*").
-		Preload("Versions", func(db *gorm.DB) *gorm.DB {
-			return db.Where("status = ?", true).Order("created_at DESC")
-		}).
-		Preload("Versions.AppVersionDownloads").
-		Preload("Carousels").Preload("Tags").
-		Joins("LEFT JOIN app_hot ON app.id = app_hot.app_id").
-		Where("app.status = ?", true).
-		Find(&rsp, "app.id = ?", c.Param("id")).Error
+	var req models.AppIndexReq
+	if err := c.ShouldBindUri(&req); err != nil {
+		a.Fail(service.StatusParamErr, nil)
+		return
+	}
+	query := a.Db.App.Query().Where(app.IDEQ(req.Id)).WithHot().WithCategories().WithTags()
+	if a.IsAuth() {
+		query.WithVersions(func(q *ent.VersionQuery) {
+			q.WithSources(func(q *ent.SourceQuery) {
+				q.WithProvider()
+			})
+		})
+	} else {
+		query.Where(app.StatusEQ(0))
+		query.WithVersions(func(q *ent.VersionQuery) {
+			q.Where(version.StatusEQ(0))
+			q.WithSources(func(q *ent.SourceQuery) {
+				q.WithProvider()
+			})
+		})
+	}
+
+	rsp, err := query.Only(context.Background())
 	if err != nil {
 		a.Fail(service.StatusBadRequest, err)
 		return

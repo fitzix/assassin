@@ -1,9 +1,10 @@
 package service
 
 import (
-	"database/sql"
 	"net/http"
+	"strings"
 
+	"github.com/fitzix/assassin/ent"
 	"github.com/fitzix/assassin/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
@@ -12,7 +13,7 @@ import (
 type AsnGin struct {
 	C  *gin.Context
 	D  *gorm.DB
-	Db *sql.DB
+	Db *ent.Client
 	L  *asnLogger
 }
 
@@ -44,8 +45,14 @@ func (a *AsnGin) GetToken() models.Token {
 }
 
 func (a *AsnGin) IsAuth() bool {
-	_, exists := a.C.Get("token")
-	return exists
+	authorization := a.C.GetHeader("Authorization")
+	if authorization == "" {
+		return false
+	}
+	if _, err := ParseToken(strings.TrimPrefix(authorization, "Bearer ")); err != nil {
+		return false
+	}
+	return true
 }
 
 // Response setting gin.JSON
@@ -66,7 +73,7 @@ func (a *AsnGin) Fail(code int, err error) {
 	a.Response(code, nil)
 }
 
-func (a *AsnGin) SuccessWithPage(total int64, data interface{}) {
+func (a *AsnGin) SuccessWithPage(total int, data interface{}) {
 	a.Response(0, models.PageRsp{
 		Total: total,
 		Info:  data,

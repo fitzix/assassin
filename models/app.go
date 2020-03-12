@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/fitzix/assassin/schema"
+	"github.com/fitzix/assassin/ent"
 )
 
 type AsnModel struct {
@@ -21,20 +21,6 @@ type App struct {
 	Title    string `json:"title" db:"title"`
 	Status   bool   `json:"status" db:"status"`
 	Category int    `json:"category" db:"category"`
-}
-
-// AppCover 首页列表基础信息
-type AppCover struct {
-	*schema.App
-	Hot  *schema.Hot     `json:"hot"`
-	Tags schema.TagSlice `json:"tags"`
-}
-
-// AppIndex 详细信息
-type AppIndex struct {
-	AppCover
-	Versions  []Version  `json:"versions"`
-	Carousels []Carousel `json:"carousels"`
 }
 
 type AppTag struct {
@@ -64,7 +50,11 @@ type AppListReq struct {
 
 type AppListRsp struct {
 	PageRsp
-	Info []AppCover `json:"info"`
+	Info ent.Apps `json:"info"`
+}
+
+type AppIndexReq struct {
+	Id int `uri:"id" binding:"required"`
 }
 
 type AppVersionRsp struct {

@@ -2,7 +2,6 @@ package models
 
 type Config struct {
 	Salt string
-	Mod  string // 生产环境release
 	Db
 	Github
 	Jwt

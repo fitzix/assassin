@@ -5,12 +5,12 @@ const (
 	AsnAppTypeBook        = 1
 	AsnAppStatusUnPublish = 0
 	AsnAppStatusPublish   = 1
-	AsnAppOrderHot
+	AsnAppOrderHot        = 1
 	AsnUploadTypeApp
 	AsnUploadTypeArticle
 )
 
-var appTypeName = map[string]int{
+var appTypeName = map[string]int8{
 	"app":   AsnAppTypeApp,         // app类型 app
 	"book":  AsnAppTypeBook,        // 书籍
 	"hot":   AsnAppOrderHot,        // 排序 热度
@@ -23,7 +23,7 @@ func AsnTypeExist(t string) (exist bool) {
 	return
 }
 
-func AsnType(t string) int {
+func AsnType(t string) int8 {
 	rsp, ok := appTypeName[t]
 	if ok {
 		return rsp

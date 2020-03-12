@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -9,15 +10,15 @@ import (
 	"strings"
 	"time"
 
+	entsql "github.com/facebookincubator/ent/dialect/sql"
 	"github.com/fitzix/assassin/consts"
+	"github.com/fitzix/assassin/ent"
+	"github.com/fitzix/assassin/ent/migrate"
 	"github.com/fitzix/assassin/models"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
-	"github.com/markbates/pkger"
 	"github.com/minio/minio-go/v6"
-	"github.com/rubenv/sql-migrate"
 	"github.com/spf13/viper"
-	"github.com/volatiletech/sqlboiler/boil"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -31,7 +32,8 @@ type asnLogger struct {
 var (
 	conf   models.Config
 	logger *asnLogger
-	db     *sql.DB
+	db     *ent.Client
+	sqlDB  *sql.DB
 	s3     *minio.Client
 )
 
@@ -40,7 +42,6 @@ func initConf() {
 	v.SetConfigType("yaml")
 	b, err := yaml.Marshal(models.Config{
 		Salt: "",
-		Mod:  "dev",
 		Db: models.Db{
 			Host:     "127.0.0.1",
 			Port:     5432,
@@ -132,24 +133,30 @@ func initLogger() {
 func initDb() {
 	var err error
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", conf.Host, conf.Port, conf.User, conf.Password, conf.Dbname)
-	db, err = sql.Open("postgres", connStr)
+	drv, err := entsql.Open("postgres", connStr)
 	if err != nil {
 		logger.Fatal(err)
 	}
-	if err := db.Ping(); err != nil {
+	sqlDB = drv.DB()
+	if err := sqlDB.Ping(); err != nil {
 		logger.Fatal(err)
 	}
+	sqlDB.SetMaxOpenConns(25)
+	sqlDB.SetMaxIdleConns(25)
+	sqlDB.SetConnMaxLifetime(5 * time.Minute)
+	var entOptions []ent.Option
+	entOptions = append(entOptions, ent.Driver(drv), ent.Log(logger.Info))
 	if gin.IsDebugging() {
-		boil.DebugMode = true
+		entOptions = append(entOptions, ent.Debug())
 	}
-	db.SetMaxOpenConns(25)
-	db.SetMaxIdleConns(25)
-	db.SetConnMaxLifetime(5 * time.Minute)
-	migrations := &migrate.HttpFileSystemMigrationSource{
-		FileSystem: pkger.Dir("/migrations"),
-	}
-	if _, err := migrate.Exec(db, "postgres", migrations, migrate.Up); err != nil {
-		logger.Fatalf("migrate err: %s", err)
+	db = ent.NewClient(entOptions...)
+	// run the auto migration tool.
+	if err := db.Schema.Create(
+		context.Background(),
+		migrate.WithDropIndex(true),
+		migrate.WithDropColumn(true),
+	); err != nil {
+		logger.Fatalf("failed creating schema resources: %v", err)
 	}
 }
 
@@ -185,8 +192,12 @@ func GetLogger() *zap.SugaredLogger {
 	return logger.SugaredLogger
 }
 
-func GetDB() *sql.DB {
+func GetDB() *ent.Client {
 	return db
+}
+
+func GetSqlDB() *sql.DB {
+	return sqlDB
 }
 
 func GetS3() *minio.Client {
