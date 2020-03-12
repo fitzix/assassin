@@ -4,23 +4,22 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/fitzix/assassin/ent"
 	"github.com/fitzix/assassin/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	"go.uber.org/zap"
 )
 
 type AsnGin struct {
 	C  *gin.Context
 	D  *gorm.DB
-	Db *ent.Client
-	L  *asnLogger
+	L  *zap.SugaredLogger
 }
 
 func NewAsnGin(c *gin.Context) *AsnGin {
 	return &AsnGin{
 		C:  c,
-		Db: db,
+		D: db,
 		L:  logger,
 	}
 }
@@ -69,13 +68,10 @@ func (a *AsnGin) Success(data interface{}) {
 }
 
 func (a *AsnGin) Fail(code int, err error) {
-	a.L.Warnf("response err code: %d err: %s", code, err)
+	a.L.Warnf("response err: %d %s", code, err)
 	a.Response(code, nil)
 }
 
-func (a *AsnGin) SuccessWithPage(total int, data interface{}) {
-	a.Response(0, models.PageRsp{
-		Total: total,
-		Info:  data,
-	})
+func (a *AsnGin) SuccessWithPage(data interface{}) {
+	a.Response(0, data)
 }

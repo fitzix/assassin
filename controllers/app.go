@@ -1,12 +1,8 @@
 package controllers
 
 import (
-	"context"
-	"fmt"
+	"strconv"
 
-	"github.com/fitzix/assassin/ent"
-	"github.com/fitzix/assassin/ent/app"
-	"github.com/fitzix/assassin/ent/version"
 	"github.com/fitzix/assassin/models"
 	"github.com/fitzix/assassin/service"
 	"github.com/fitzix/assassin/utils"
@@ -19,7 +15,7 @@ func AppList(c *gin.Context) {
 	a := service.NewAsnGin(c)
 	var req models.AppListReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		a.Fail(service.StatusParamErr, nil)
+		a.Fail(service.StatusParamErr, err)
 		return
 	}
 
@@ -31,46 +27,41 @@ func AppList(c *gin.Context) {
 		}
 	}
 
-	if service.AsnType(req.Order) > 0 {
-		appListHot(a, req)
-		return
-	}
+	var rsp models.AppListRsp
 
-	query := a.Db.App.Query()
+	db := a.D.Table("app")
 
 	if req.Name != "" {
-		query.Where(app.NameContains(fmt.Sprintf("%%%s%%", req.Name)))
+		db = db.Where("app.name LIKE %?%", req.Name)
 	}
 
 	if t := service.AsnType(req.Type); t > -1 {
-		query.Where(app.TypeEQ(t))
+		db = db.Where("app.type = ?", t)
 	}
 
 	if t := service.AsnType(req.Status); t > -1 {
-		query.Where(app.TypeEQ(t))
+		db = db.Where("app.status = ?", strconv.Itoa(t))
 	}
-	ctx := context.Background()
-	total, err := query.Count(ctx)
-	if err != nil {
+
+	// count
+	if err := db.Table("app").Count(&rsp.Total).Error; err != nil {
 		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 
-	apps, err := query.Order(ent.Desc(app.FieldUpdatedAt)).WithHot().WithCategories().All(ctx)
-	if err != nil {
-		a.Fail(service.StatusBadRequest, err)
-		return
+	if service.AsnTypeExist(req.Order) {
+		db = db.Joins("LEFT JOIN hot ON app.id = hot.app_id").Order("hot.hot DESC")
+	} else {
+		db = db.Order("app.updated_at DESC")
 	}
-	a.SuccessWithPage(total, apps)
-}
 
-func appListHot(a *service.AsnGin, req models.AppListReq) {
-	var rsp models.AppListRsp
-	if err := service.GetSqlDB().QueryRow(`SELECT count(*) FROM "app" WHERE "app"."type" = $1 AND "app"."status" = $2`, service.AsnType(req.Type), service.AsnAppStatusPublish).Scan(&rsp.Total); err != nil {
+	// rsp
+	if err := db.Select("app.*, hot.hot, hot.view").Preload("Categories").Find(&rsp.Info).Error; err != nil {
 		a.Fail(service.StatusBadRequest, err)
 		return
 	}
-	service.GetSqlDB().Query(`SELECT * FROM "app" LEFT JOIN "hot" ON "app"."id" = "hot"."app_id" WHERE "app"."type" = $1 AND "app"."status" = $2 `, service.AsnType(req.Type), service.AsnAppStatusPublish)
+
+	a.SuccessWithPage(rsp)
 }
 
 func AppIndex(c *gin.Context) {
@@ -80,29 +71,6 @@ func AppIndex(c *gin.Context) {
 		a.Fail(service.StatusParamErr, nil)
 		return
 	}
-	query := a.Db.App.Query().Where(app.IDEQ(req.Id)).WithHot().WithCategories().WithTags()
-	if a.IsAuth() {
-		query.WithVersions(func(q *ent.VersionQuery) {
-			q.WithSources(func(q *ent.SourceQuery) {
-				q.WithProvider()
-			})
-		})
-	} else {
-		query.Where(app.StatusEQ(0))
-		query.WithVersions(func(q *ent.VersionQuery) {
-			q.Where(version.StatusEQ(0))
-			q.WithSources(func(q *ent.SourceQuery) {
-				q.WithProvider()
-			})
-		})
-	}
-
-	rsp, err := query.Only(context.Background())
-	if err != nil {
-		a.Fail(service.StatusBadRequest, err)
-		return
-	}
-	a.Success(rsp)
 }
 
 func AppAuthorizedIndex(c *gin.Context) {
@@ -115,7 +83,6 @@ func AppAuthorizedIndex(c *gin.Context) {
 
 	if err := db.Find(&down, "app.id = ?", c.Param("id")).Error;
 		err != nil {
-		a.L.Errorf("err %s", err)
 		a.Fail(service.StatusBadRequest, nil)
 		return
 	}
@@ -136,7 +103,7 @@ func AppCreate(c *gin.Context) {
 		up.Carousels = up.Carousels[1:]
 	}
 
-	up.AppID = utils.GenNanoId()
+	up.ID = utils.GenNanoId()
 
 	if err := a.D.Omit("View", "Hot").Create(&up).Error; err != nil {
 		a.Fail(service.StatusBadRequest, err)
@@ -158,7 +125,7 @@ func AppUpdate(c *gin.Context) {
 		a.Fail(service.StatusParamErr, err)
 		return
 	}
-	up.AppID = c.Param("id")
+	up.ID = c.Param("id")
 	up.Versions = nil
 	if len(up.Carousels) > 0 {
 		up.Icon = up.Carousels[0].Url

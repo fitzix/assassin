@@ -1,9 +1,8 @@
 package models
 
 type User struct {
-	ID       int    `json:"-"`
-	UID      string `json:"uid"`
-	Name     string `json:"name" binding:"required,email"`
+	ID       string `json:"-"`
+	Name     string `json:"name"`
 	Password string `json:"-"`
 	RoleId   int    `json:"roleId"`
 	Code     uint   `json:"-"`

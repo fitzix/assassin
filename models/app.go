@@ -2,25 +2,31 @@ package models
 
 import (
 	"time"
-
-	"github.com/fitzix/assassin/ent"
 )
 
 type AsnModel struct {
-	ID        uint       `json:"-" db:"id"`
-	CreatedAt time.Time  `json:"createdAt" db:"created_at"`
-	UpdatedAt time.Time  `json:"updatedAt" db:"updated_at"`
-	DeletedAt *time.Time `json:"-" db:"deleted_at"`
+	ID        string     `json:"id"`
+	CreatedAt time.Time  `json:"-"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+	DeletedAt *time.Time `json:"-"`
 }
 
 type App struct {
-	AppID    string `json:"appId" db:"app_id"`
-	Name     string `json:"name"`
-	Type     int    `json:"type"`
-	Icon     string `json:"icon" db:"icon"`
-	Title    string `json:"title" db:"title"`
-	Status   bool   `json:"status" db:"status"`
-	Category int    `json:"category" db:"category"`
+	AsnModel
+	Name   string `json:"name"`
+	Type   int    `json:"type"`
+	Icon   string `json:"icon"`
+	Title  string `json:"title"`
+	Status bool   `json:"status"`
+}
+
+// gorm:"many2many:app_category;jointable_foreignkey:app_id;"
+
+type AppList struct {
+	App
+	Hot        int           `json:"hot"`
+	View       int           `json:"view"`
+	Categories []AppCategory `json:"categories" gorm:"foreignkey:app_id"`
 }
 
 type AppTag struct {
@@ -42,15 +48,15 @@ func (a *App) CouldUpdateColumns() []interface{} {
 
 type AppListReq struct {
 	Name   string `json:"name" form:"name"`
-	Order  string `json:"order" form:"order"`
-	Type   string `json:"type" form:"type" validate:"oneof=app book"`
-	Status string `json:"status" form:"status" validate:"oneof=pub unpub"`
+	Order  string `json:"order" form:"order" binding:"omitempty,eq=hot"`
+	Type   string `json:"type" form:"type" binding:"omitempty,oneof=app book"`
+	Status string `json:"status" form:"status" binding:"omitempty,oneof=pub unpub"`
 	PageReq
 }
 
 type AppListRsp struct {
 	PageRsp
-	Info ent.Apps `json:"info"`
+	Info []AppList `json:"info"`
 }
 
 type AppIndexReq struct {

@@ -5,3 +5,8 @@ type Category struct {
 	Name string `json:"name"`
 	Icon string `json:"icon"`
 }
+
+type AppCategory struct {
+	AppID      string `json:"-"`
+	CategoryID int    `json:"id"`
+}

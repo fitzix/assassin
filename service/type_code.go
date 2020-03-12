@@ -10,7 +10,7 @@ const (
 	AsnUploadTypeArticle
 )
 
-var appTypeName = map[string]int8{
+var appTypeName = map[string]int{
 	"app":   AsnAppTypeApp,         // app类型 app
 	"book":  AsnAppTypeBook,        // 书籍
 	"hot":   AsnAppOrderHot,        // 排序 热度
@@ -23,7 +23,7 @@ func AsnTypeExist(t string) (exist bool) {
 	return
 }
 
-func AsnType(t string) int8 {
+func AsnType(t string) int {
 	rsp, ok := appTypeName[t]
 	if ok {
 		return rsp

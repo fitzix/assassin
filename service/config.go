@@ -2,22 +2,20 @@ package service
 
 import (
 	"bytes"
-	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
 	"strings"
 	"time"
 
-	entsql "github.com/facebookincubator/ent/dialect/sql"
 	"github.com/fitzix/assassin/consts"
-	"github.com/fitzix/assassin/ent"
-	"github.com/fitzix/assassin/ent/migrate"
 	"github.com/fitzix/assassin/models"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
+	"github.com/markbates/pkger"
 	"github.com/minio/minio-go/v6"
+	"github.com/rubenv/sql-migrate"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -25,15 +23,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type asnLogger struct {
-	*zap.SugaredLogger
-}
-
 var (
 	conf   models.Config
-	logger *asnLogger
-	db     *ent.Client
-	sqlDB  *sql.DB
+	logger *zap.SugaredLogger
+	db     *gorm.DB
 	s3     *minio.Client
 )
 
@@ -89,10 +82,6 @@ func initConf() {
 	}
 }
 
-func (l *asnLogger) Print(v ...interface{}) {
-	l.Info(v...)
-}
-
 func initLogger() {
 	hook := lumberjack.Logger{
 		Filename: "logs/app.log",
@@ -125,38 +114,33 @@ func initLogger() {
 		)
 	}
 
-	logger = &asnLogger{
-		SugaredLogger: zap.New(core, zap.AddStacktrace(zapcore.ErrorLevel), zap.AddCaller(), zap.AddCallerSkip(1)).Sugar(),
-	}
+	logger = zap.New(core, zap.AddStacktrace(zapcore.ErrorLevel), zap.AddCaller(), zap.AddCallerSkip(1)).Sugar()
 }
 
 func initDb() {
 	var err error
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", conf.Host, conf.Port, conf.User, conf.Password, conf.Dbname)
-	drv, err := entsql.Open("postgres", connStr)
+	db, err = gorm.Open("postgres", connStr)
 	if err != nil {
 		logger.Fatal(err)
 	}
-	sqlDB = drv.DB()
-	if err := sqlDB.Ping(); err != nil {
+	if err := db.DB().Ping(); err != nil {
 		logger.Fatal(err)
 	}
-	sqlDB.SetMaxOpenConns(25)
-	sqlDB.SetMaxIdleConns(25)
-	sqlDB.SetConnMaxLifetime(5 * time.Minute)
-	var entOptions []ent.Option
-	entOptions = append(entOptions, ent.Driver(drv), ent.Log(logger.Info))
+	db.SingularTable(true)
+	db.DB().SetMaxOpenConns(25)
+	db.DB().SetMaxIdleConns(25)
+	db.DB().SetConnMaxLifetime(5 * time.Minute)
+
 	if gin.IsDebugging() {
-		entOptions = append(entOptions, ent.Debug())
+		db.LogMode(true)
 	}
-	db = ent.NewClient(entOptions...)
-	// run the auto migration tool.
-	if err := db.Schema.Create(
-		context.Background(),
-		migrate.WithDropIndex(true),
-		migrate.WithDropColumn(true),
-	); err != nil {
-		logger.Fatalf("failed creating schema resources: %v", err)
+
+	migrations := &migrate.HttpFileSystemMigrationSource{
+		FileSystem: pkger.Dir("/migrations"),
+	}
+	if _, err := migrate.Exec(db.DB(), "postgres", migrations, migrate.Up); err != nil {
+		logger.Fatalf("migrate err: %s", err)
 	}
 }
 
@@ -189,15 +173,11 @@ func GetConf() models.Config {
 }
 
 func GetLogger() *zap.SugaredLogger {
-	return logger.SugaredLogger
+	return logger
 }
 
-func GetDB() *ent.Client {
+func GetDB() *gorm.DB {
 	return db
-}
-
-func GetSqlDB() *sql.DB {
-	return sqlDB
 }
 
 func GetS3() *minio.Client {

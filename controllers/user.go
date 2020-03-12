@@ -15,10 +15,10 @@ func UserLogin(c *gin.Context) {
 		return
 	}
 	var user models.User
-	// if err := a.Db.Get(&user, `SELECT * FROM "user" WHERE "name" = $1`, up.UserName); err != nil {
-	// 	a.Fail(service.StatusUserNotExist, err)
-	// 	return
-	// }
+	if err := a.D.Where("name = ? AND status = ?", up.UserName, true).First(&user).Error; err != nil {
+		a.Fail(service.StatusUserNotExist, err)
+		return
+	}
 
 	if !utils.CheckPass(user.Password, up.Password) {
 		a.Fail(service.StatusUserWrongPwd, nil)
@@ -26,7 +26,7 @@ func UserLogin(c *gin.Context) {
 	}
 
 	token, err := service.GenJwt(models.Token{
-		Uid:  user.UID,
+		Uid:  user.ID,
 		Code: user.Code,
 	})
 	if err != nil {
@@ -54,7 +54,7 @@ func UserCreate(c *gin.Context) {
 	}
 
 	user := models.User{
-		UID:      utils.GenNanoId(),
+		ID:      utils.GenNanoId(),
 		Name:     up.UserName,
 		Password: string(encPwd),
 		RoleId:   1,

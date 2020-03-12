@@ -13,5 +13,5 @@ type PageReq struct {
 
 type PageRsp struct {
 	Total int       `json:"total"`
-	Info  interface{} `json:"info"`
+	// Info  interface{} `json:"info"`
 }
