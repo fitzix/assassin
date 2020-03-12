@@ -11,6 +11,7 @@ require (
 	github.com/matoous/go-nanoid v1.2.0
 	github.com/minio/minio-go/v6 v6.0.49
 	github.com/rubenv/sql-migrate v0.0.0-20200212082348-64f95ea68aa3
+	github.com/sony/sonyflake v1.0.0
 	github.com/spf13/viper v1.6.2
 	github.com/t-tiger/gorm-bulk-insert v1.3.0
 	go.uber.org/zap v1.14.0

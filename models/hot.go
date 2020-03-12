@@ -1,8 +1,7 @@
 package models
 
-type AppHot struct {
-	ID    uint
-	AppId string
-	Hot   int
-	View  int
+type Hot struct {
+	AppId uint64 `json:"-"`
+	Hot   int    `json:"hot"`
+	View  int    `json:"view"`
 }

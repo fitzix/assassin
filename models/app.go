@@ -2,10 +2,12 @@ package models
 
 import (
 	"time"
+
+	"github.com/fitzix/assassin/utils"
 )
 
 type AsnModel struct {
-	ID        string     `json:"id"`
+	ID        uint64     `json:"id"`
 	CreatedAt time.Time  `json:"-"`
 	UpdatedAt time.Time  `json:"updatedAt"`
 	DeletedAt *time.Time `json:"-"`
@@ -13,38 +15,31 @@ type AsnModel struct {
 
 type App struct {
 	AsnModel
-	Name   string `json:"name"`
-	Type   int    `json:"type"`
-	Icon   string `json:"icon"`
-	Title  string `json:"title"`
-	Status bool   `json:"status"`
+	Name        string        `json:"name" binding:"required"`
+	Type        int           `json:"type" binding:"oneof=0 1"`
+	Icon        string        `json:"icon"`
+	Title       string        `json:"title" binding:"required"`
+	Description string        `json:"description"`
+	Status      bool          `json:"status"`
+	Hot         Hot           `json:"hot"`
+	Categories  []AppCategory `json:"categories"`
+	Tags        []AppTag      `json:"tags"`
+	Versions    []Version     `json:"versions"`
+	Carousels   []Carousel    `json:"carousels"`
 }
 
 // gorm:"many2many:app_category;jointable_foreignkey:app_id;"
 
-type AppList struct {
-	App
-	Hot        int           `json:"hot"`
-	View       int           `json:"view"`
-	Categories []AppCategory `json:"categories" gorm:"foreignkey:app_id"`
-}
-
-type AppTag struct {
-	ID    uint   `json:"id"`
-	AppId string `json:"appId"`
-	TagId uint   `json:"tagId"`
-}
-
-func (a *App) CouldUpdateColumns() []interface{} {
-	return []interface{}{
-		"name",
-		"type",
-		"icon",
-		"description",
-		"status",
-		"update_at",
-	}
-}
+// func (a *App) CouldUpdateColumns() []interface{} {
+// 	return []interface{}{
+// 		"name",
+// 		"type",
+// 		"icon",
+// 		"description",
+// 		"status",
+// 		"update_at",
+// 	}
+// }
 
 type AppListReq struct {
 	Name   string `json:"name" form:"name"`
@@ -56,14 +51,21 @@ type AppListReq struct {
 
 type AppListRsp struct {
 	PageRsp
-	Info []AppList `json:"info"`
+	Info []App `json:"info"`
 }
 
 type AppIndexReq struct {
-	Id int `uri:"id" binding:"required"`
+	Id uint64 `uri:"id" binding:"required"`
 }
 
 type AppVersionRsp struct {
 	Version
 	Sources []Source `json:"sources"`
+}
+
+func (a *App) Init() {
+	a.Hot.Hot = 1
+	a.Hot.View = 1
+	a.UpdatedAt = time.Now()
+	a.ID = utils.NextID()
 }

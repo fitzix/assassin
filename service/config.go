@@ -16,6 +16,7 @@ import (
 	"github.com/markbates/pkger"
 	"github.com/minio/minio-go/v6"
 	"github.com/rubenv/sql-migrate"
+	"github.com/sony/sonyflake"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -28,6 +29,7 @@ var (
 	logger *zap.SugaredLogger
 	db     *gorm.DB
 	s3     *minio.Client
+	Flake  *sonyflake.Sonyflake
 )
 
 func initConf() {
@@ -168,6 +170,12 @@ func initS3() {
 	setS3Policy(consts.S3PolicyAllowImageStatic)
 }
 
+func initSnow() {
+	Flake = sonyflake.NewSonyflake(sonyflake.Settings{
+		StartTime: time.Now(),
+	})
+}
+
 func GetConf() models.Config {
 	return conf
 }
@@ -189,4 +197,5 @@ func Init() {
 	initLogger()
 	// initS3()
 	initDb()
+	initSnow()
 }

@@ -1,13 +1,12 @@
 package controllers
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/fitzix/assassin/models"
 	"github.com/fitzix/assassin/service"
-	"github.com/fitzix/assassin/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 	"github.com/t-tiger/gorm-bulk-insert"
 )
 
@@ -32,7 +31,7 @@ func AppList(c *gin.Context) {
 	db := a.D.Table("app")
 
 	if req.Name != "" {
-		db = db.Where("app.name LIKE %?%", req.Name)
+		db = db.Where("app.name LIKE ?", fmt.Sprintf("%%%s%%", req.Name))
 	}
 
 	if t := service.AsnType(req.Type); t > -1 {
@@ -49,6 +48,11 @@ func AppList(c *gin.Context) {
 		return
 	}
 
+	if rsp.Total == 0 {
+		a.SuccessWithPage(rsp)
+		return
+	}
+
 	if service.AsnTypeExist(req.Order) {
 		db = db.Joins("LEFT JOIN hot ON app.id = hot.app_id").Order("hot.hot DESC")
 	} else {
@@ -56,7 +60,7 @@ func AppList(c *gin.Context) {
 	}
 
 	// rsp
-	if err := db.Select("app.*, hot.hot, hot.view").Preload("Categories").Find(&rsp.Info).Error; err != nil {
+	if err := a.Page(db.Preload("Categories").Preload("Hot"), req.PageReq, &rsp.Info); err != nil {
 		a.Fail(service.StatusBadRequest, err)
 		return
 	}
@@ -68,54 +72,41 @@ func AppIndex(c *gin.Context) {
 	a := service.NewAsnGin(c)
 	var req models.AppIndexReq
 	if err := c.ShouldBindUri(&req); err != nil {
-		a.Fail(service.StatusParamErr, nil)
+		a.Fail(service.StatusParamErr, err)
 		return
 	}
-}
-
-func AppAuthorizedIndex(c *gin.Context) {
-	a := service.NewAsnGin(c)
-	var down service.App
-
-	db := a.D.Select("app.*, app_hot.*").Preload("Versions", func(db *gorm.DB) *gorm.DB {
-		return db.Order("created_at DESC")
-	}).Preload("Versions.AppVersionDownloads").Preload("Carousels").Preload("Tags").Joins("LEFT JOIN app_hot ON app.id = app_hot.app_id")
-
-	if err := db.Find(&down, "app.id = ?", c.Param("id")).Error;
-		err != nil {
-		a.Fail(service.StatusBadRequest, nil)
+	var rsp models.App
+	db := a.D.Table("app").
+		Where("id = ?", req.Id).
+		Preload("Hot").
+		Preload("Carousels").
+		Preload("Categories").
+		Preload("Tags").
+		Preload("Versions.Sources")
+	if !a.IsAuth() {
+		db = db.Where("app.status = ?", true)
+	}
+	if err := db.First(&rsp).Error; err != nil {
+		a.Fail(service.StatusBadRequest, err)
 		return
 	}
-	a.Success(down)
+	a.Success(rsp)
 }
 
 func AppCreate(c *gin.Context) {
 	a := service.NewAsnGin(c)
-	var up service.App
-	if err := c.BindJSON(&up); err != nil {
+	var app models.App
+	if err := c.ShouldBindJSON(&app); err != nil {
 		a.Fail(service.StatusParamErr, err)
 		return
 	}
-
-	up.Versions = nil
-	if len(up.Carousels) > 0 {
-		up.Icon = up.Carousels[0].Url
-		up.Carousels = up.Carousels[1:]
-	}
-
-	up.ID = utils.GenNanoId()
-
-	if err := a.D.Omit("View", "Hot").Create(&up).Error; err != nil {
+	app.Init()
+	if err := a.D.Create(&app).Error; err != nil {
 		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 
-	// create desc file to github
-	// go func(id string) {
-	// 	_, _ = service.GetGithubClient().CreateMdFile(id, service.AsnUploadTypeApp)
-	// }(up.ID)
-
-	a.Success(up)
+	a.Success(app)
 }
 func AppUpdate(c *gin.Context) {
 	a := service.NewAsnGin(c)
@@ -125,17 +116,17 @@ func AppUpdate(c *gin.Context) {
 		a.Fail(service.StatusParamErr, err)
 		return
 	}
-	up.ID = c.Param("id")
+	// up.ID = c.Param("id")
 	up.Versions = nil
 	if len(up.Carousels) > 0 {
 		up.Icon = up.Carousels[0].Url
 		up.Carousels = up.Carousels[1:]
 	}
 
-	if err := a.D.Model(&up).Select("", up.CouldUpdateColumns()...).Updates(up).Error; err != nil {
-		a.Fail(service.StatusBadRequest, err)
-		return
-	}
+	// if err := a.D.Model(&up).Select("", up.CouldUpdateColumns()...).Updates(up).Error; err != nil {
+	// 	a.Fail(service.StatusBadRequest, err)
+	// 	return
+	// }
 	a.Success(up)
 }
 
@@ -169,8 +160,8 @@ func AppTagsCreateOrUpdate(c *gin.Context) {
 
 	for _, v := range up {
 		insertRecords = append(insertRecords, models.AppTag{
-			AppId: c.Param("id"),
-			TagId: v,
+			// AppID: c.Param("id"),
+			TagID: v,
 		})
 	}
 

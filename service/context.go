@@ -11,31 +11,21 @@ import (
 )
 
 type AsnGin struct {
-	C  *gin.Context
-	D  *gorm.DB
-	L  *zap.SugaredLogger
+	C *gin.Context
+	D *gorm.DB
+	L *zap.SugaredLogger
 }
 
 func NewAsnGin(c *gin.Context) *AsnGin {
 	return &AsnGin{
-		C:  c,
+		C: c,
 		D: db,
-		L:  logger,
+		L: logger,
 	}
 }
 
-func (a *AsnGin) Page(stmt interface{}, page models.PageReq, count *int, dest interface{}) error {
-	// query := stmt.Column
-	// stmt.Column = []interface{}{"COUNT (*)"}
-	// if err := stmt.LoadOne(count); err != nil {
-	// 	return err
-	// }
-	//
-	// stmt.Column = query
-	// stmt.Offset(uint64(page.PerPage * (page.Page - 1))).Limit(uint64(page.PerPage))
-	// _, err := stmt.Load(dest)
-	// return err
-	return nil
+func (a *AsnGin) Page(db *gorm.DB, page models.PageReq, dest interface{}) error {
+	return db.Offset(page.PerPage * (page.Page - 1)).Limit(page.PerPage).Find(dest).Error
 }
 
 func (a *AsnGin) GetToken() models.Token {

@@ -1,12 +1,16 @@
 package models
 
-type Category struct {
-	ID   int    `json:"id"`
+type CategoryCreated struct {
 	Name string `json:"name"`
 	Icon string `json:"icon"`
 }
 
+type Category struct {
+	ID int `json:"id"`
+	CategoryCreated
+}
+
 type AppCategory struct {
-	AppID      string `json:"-"`
+	AppID      uint64 `json:"-"`
 	CategoryID int    `json:"id"`
 }

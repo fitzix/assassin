@@ -28,7 +28,7 @@ func VersionCreate(c *gin.Context) {
 		a.Fail(service.StatusParamErr, err)
 		return
 	}
-	up.AppId = c.Param("id")
+	// up.AppId = c.Param("id")
 
 	tx := a.D.Begin()
 	if err := tx.Create(&up).Error; err != nil {

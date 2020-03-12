@@ -28,7 +28,7 @@ func CarouselCreate(c *gin.Context) {
 
 	for _, v := range up {
 		insertRecords = append(insertRecords, models.Carousel{
-			AppId: c.Param("id"),
+			// AppId: c.Param("id"),
 			Url:   v,
 		})
 	}
