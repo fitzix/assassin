@@ -7,25 +7,28 @@ import (
 )
 
 type AsnModel struct {
-	ID        uint64     `json:"id"`
-	CreatedAt time.Time  `json:"-"`
-	UpdatedAt time.Time  `json:"updatedAt"`
-	DeletedAt *time.Time `json:"-"`
 }
 
 type App struct {
-	AsnModel
-	Name        string        `json:"name" binding:"required"`
-	Type        int           `json:"type" binding:"oneof=0 1"`
-	Icon        string        `json:"icon"`
-	Title       string        `json:"title" binding:"required"`
-	Description string        `json:"description"`
-	Status      bool          `json:"status"`
-	Hot         Hot           `json:"hot"`
-	Categories  []AppCategory `json:"categories"`
-	Tags        []AppTag      `json:"tags"`
-	Versions    []Version     `json:"versions"`
-	Carousels   []Carousel    `json:"carousels"`
+	ID          uint64     `json:"id"`
+	CreatedAt   time.Time  `json:"-"`
+	VersionAt   time.Time  `json:"versionAt"`
+	DeletedAt   *time.Time `json:"-"`
+	Name        string     `json:"name" binding:"required"`
+	Type        int        `json:"type" binding:"oneof=0 1"`
+	Icon        string     `json:"icon"`
+	Title       string     `json:"title" binding:"required"`
+	Description string     `json:"description"`
+	Status      bool       `json:"status"`
+}
+
+type AppEdges struct {
+	App
+	Hot        Hot           `json:"hot" gorm:"foreignkey:app_id"`
+	Categories []AppCategory `json:"categories" gorm:"foreignkey:app_id"`
+	Tags       []AppTag      `json:"tags" gorm:"foreignkey:app_id"`
+	Versions   []Version     `json:"versions" gorm:"foreignkey:app_id"`
+	Carousels  []Carousel    `json:"carousels" gorm:"foreignkey:app_id"`
 }
 
 // gorm:"many2many:app_category;jointable_foreignkey:app_id;"
@@ -51,7 +54,7 @@ type AppListReq struct {
 
 type AppListRsp struct {
 	PageRsp
-	Info []App `json:"info"`
+	Info []AppEdges `json:"info"`
 }
 
 type AppIndexReq struct {
@@ -63,9 +66,13 @@ type AppVersionRsp struct {
 	Sources []Source `json:"sources"`
 }
 
-func (a *App) Init() {
-	a.Hot.Hot = 1
-	a.Hot.View = 1
-	a.UpdatedAt = time.Now()
+// table name
+func (AppEdges) TableName() string {
+	return "app"
+}
+
+// hooks
+func (a *App) BeforeCreate() {
 	a.ID = utils.NextID()
+	a.VersionAt = time.Now()
 }

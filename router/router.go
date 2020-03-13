@@ -32,7 +32,7 @@ func Route(r *gin.Engine) {
 		// app
 		auth.POST("/apps", controllers.AppCreate)
 		auth.PUT("/apps/:id", controllers.AppUpdate)
-
+		// tags
 		auth.PUT("/apps/:id/tags", controllers.AppTagsCreateOrUpdate)
 		// version
 		auth.POST("/apps/:id/versions", controllers.VersionCreate)

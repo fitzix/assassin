@@ -44,7 +44,7 @@ CREATE TABLE "app" (
     "category"    INT2      DEFAULT 1     NOT NULL,
     "status"      BOOL      DEFAULT FALSE NOT NULL,
     "created_at"  TIMESTAMP DEFAULT NOW() NOT NULL,
-    "updated_at"  TIMESTAMP DEFAULT NOW() NOT NULL,
+    "version_at"  TIMESTAMP DEFAULT NOW() NOT NULL,
     "deleted_at"  TIMESTAMP
 );
 CREATE INDEX ON "app" ("type", "status", "deleted_at");

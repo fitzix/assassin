@@ -7,7 +7,7 @@ import (
 	"github.com/fitzix/assassin/models"
 	"github.com/fitzix/assassin/service"
 	"github.com/gin-gonic/gin"
-	"github.com/t-tiger/gorm-bulk-insert"
+	gormbulk "github.com/t-tiger/gorm-bulk-insert"
 )
 
 func AppList(c *gin.Context) {
@@ -75,8 +75,8 @@ func AppIndex(c *gin.Context) {
 		a.Fail(service.StatusParamErr, err)
 		return
 	}
-	var rsp models.App
-	db := a.D.Table("app").
+	var rsp models.AppEdges
+	db := a.D.
 		Where("id = ?", req.Id).
 		Preload("Hot").
 		Preload("Carousels").
@@ -95,12 +95,11 @@ func AppIndex(c *gin.Context) {
 
 func AppCreate(c *gin.Context) {
 	a := service.NewAsnGin(c)
-	var app models.App
+	var app models.AppEdges
 	if err := c.ShouldBindJSON(&app); err != nil {
 		a.Fail(service.StatusParamErr, err)
 		return
 	}
-	app.Init()
 	if err := a.D.Create(&app).Error; err != nil {
 		a.Fail(service.StatusBadRequest, err)
 		return
@@ -110,66 +109,46 @@ func AppCreate(c *gin.Context) {
 }
 func AppUpdate(c *gin.Context) {
 	a := service.NewAsnGin(c)
-	var up service.App
-
-	if err := c.BindJSON(&up); err != nil {
-		a.Fail(service.StatusParamErr, err)
+	var uri models.AppIndexReq
+	var req models.App
+	if c.ShouldBindJSON(&req) != nil || c.ShouldBindUri(&uri) != nil {
+		a.Fail(service.StatusParamErr, nil)
 		return
 	}
-	// up.ID = c.Param("id")
-	up.Versions = nil
-	if len(up.Carousels) > 0 {
-		up.Icon = up.Carousels[0].Url
-		up.Carousels = up.Carousels[1:]
-	}
-
-	// if err := a.D.Model(&up).Select("", up.CouldUpdateColumns()...).Updates(up).Error; err != nil {
-	// 	a.Fail(service.StatusBadRequest, err)
-	// 	return
-	// }
-	a.Success(up)
-}
-
-func AppTags(c *gin.Context) {
-	a := service.NewAsnGin(c)
-	var down []models.AppTag
-	if err := a.D.Where("app_id = ?", c.Param("id")).Find(&down).Error; err != nil {
+	req.ID = uri.Id
+	if err := a.D.Unscoped().Model(&req).Omit("id", "version_at").Updates(req).Error; err != nil {
 		a.Fail(service.StatusBadRequest, err)
 		return
 	}
-	a.Success(down)
+	a.Success(req)
 }
 
 func AppTagsCreateOrUpdate(c *gin.Context) {
 	a := service.NewAsnGin(c)
-	var up []uint
-	if err := c.BindJSON(&up); err != nil {
-		a.Fail(service.StatusParamErr, err)
+	var req []uint
+	var uri models.AppIndexReq
+	if c.ShouldBindJSON(&req) != nil || c.ShouldBindUri(&uri) != nil {
+		a.Fail(service.StatusParamErr, nil)
 		return
 	}
-
 	tx := a.D.Begin()
-
-	if err := tx.Delete(&models.AppTag{}, "app_id IN ( ? )", up).Error; err != nil {
+	if err := tx.Delete(&models.AppTag{}, "app_id = ?", uri.Id).Error; err != nil {
 		tx.Rollback()
 		a.Fail(service.StatusBadRequest, err)
 		return
 	}
-
-	var insertRecords []interface{}
-
-	for _, v := range up {
-		insertRecords = append(insertRecords, models.AppTag{
-			// AppID: c.Param("id"),
+	var appTags []interface{}
+	for _, v := range req {
+		appTags = append(appTags, models.AppTag{
+			AppID: uri.Id,
 			TagID: v,
 		})
 	}
-
-	if err := gormbulk.BulkInsert(tx, insertRecords, 3000); err != nil {
+	if err := gormbulk.BulkInsert(tx, appTags, len(appTags)); err != nil {
 		tx.Rollback()
 		a.Fail(service.StatusBadRequest, err)
 		return
 	}
 	tx.Commit()
-	a.Success(insertRecords)
+	a.Success(appTags)
 }
