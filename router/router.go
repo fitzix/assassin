@@ -34,13 +34,13 @@ func Route(r *gin.Engine) {
 		auth.PUT("/apps/:id", controllers.AppUpdate)
 		// tags
 		auth.PUT("/apps/:id/tags", controllers.AppTagsCreateOrUpdate)
+		// categories
+		auth.PUT("/apps/:id/categories", controllers.AppCategoryUpdate)
 		// version
 		auth.POST("/apps/:id/versions", controllers.VersionCreate)
 		auth.PUT("/apps/:id/versions/:versionId", controllers.VersionUpdate)
 		// carousel
-		auth.POST("/apps/:id/carousels", controllers.CarouselCreate)
-		auth.DELETE("/apps/:id/carousels/:cid", controllers.CarouselDelete)
-
+		auth.PUT("/apps/:id/carousels", controllers.AppCarouselUpdate)
 		// tag
 		auth.POST("/tags", controllers.TagCreate)
 		auth.PUT("/tags/:id", controllers.TagUpdate)

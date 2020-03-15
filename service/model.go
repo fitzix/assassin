@@ -3,15 +3,6 @@ package service
 import "github.com/fitzix/assassin/models"
 
 
-type App struct {
-	models.App
-	View      int                  `json:"view"`
-	Hot       int                  `json:"hot"`
-	Versions  []AppVersion         `json:"versions"`
-	Tags      []models.AppTag      `json:"tags"`
-	Carousels []models.Carousel `json:"carousels"`
-}
-
 type AppVersion struct {
 	models.Version
 	AppVersionDownloads []AppVersionDownload `json:"downloads"`

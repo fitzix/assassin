@@ -15,9 +15,7 @@ func TagList(c *gin.Context) {
 	}
 	a.Success(down)
 }
-func TagIndex(c *gin.Context) {
 
-}
 func TagCreate(c *gin.Context) {
 	a := service.NewAsnGin(c)
 	var up models.Tag

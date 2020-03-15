@@ -123,6 +123,36 @@ func AppUpdate(c *gin.Context) {
 	a.Success(req)
 }
 
+func AppCategoryUpdate(c *gin.Context) {
+	a := service.NewAsnGin(c)
+	var req []int
+	var uri models.AppIndexReq
+	if c.ShouldBindJSON(&req) != nil || c.ShouldBindUri(&uri) != nil {
+		a.Fail(service.StatusParamErr, nil)
+		return
+	}
+	tx := a.D.Begin()
+	if err := tx.Delete(&models.AppCategory{}, "app_id = ?", uri.Id).Error; err != nil {
+		tx.Rollback()
+		a.Fail(service.StatusBadRequest, err)
+		return
+	}
+	var appCategories []interface{}
+	for _, v := range req {
+		appCategories = append(appCategories, models.AppCategory{
+			AppID:      uri.Id,
+			CategoryID: v,
+		})
+	}
+	if err := gormbulk.BulkInsert(tx, appCategories, len(appCategories)); err != nil {
+		tx.Rollback()
+		a.Fail(service.StatusBadRequest, err)
+		return
+	}
+	tx.Commit()
+	a.Success(appCategories)
+}
+
 func AppTagsCreateOrUpdate(c *gin.Context) {
 	a := service.NewAsnGin(c)
 	var req []uint
@@ -151,4 +181,34 @@ func AppTagsCreateOrUpdate(c *gin.Context) {
 	}
 	tx.Commit()
 	a.Success(appTags)
+}
+
+func AppCarouselUpdate(c *gin.Context) {
+	a := service.NewAsnGin(c)
+	var req []models.Carousel
+	var uri models.AppIndexReq
+	if c.ShouldBindJSON(&req) != nil || c.ShouldBindUri(&uri) != nil {
+		a.Fail(service.StatusParamErr, nil)
+		return
+	}
+	tx := a.D.Begin()
+	if err := tx.Delete(&models.Carousel{}, "app_id = ?", uri.Id).Error; err != nil {
+		tx.Rollback()
+		a.Fail(service.StatusBadRequest, err)
+		return
+	}
+	var carousels []interface{}
+	for _, v := range req {
+		carousels = append(carousels, models.Carousel{
+			AppID: uri.Id,
+			Url:   v.Url,
+		})
+	}
+	if err := gormbulk.BulkInsert(tx, carousels, len(carousels)); err != nil {
+		tx.Rollback()
+		a.Fail(service.StatusBadRequest, err)
+		return
+	}
+	tx.Commit()
+	a.Success(carousels)
 }

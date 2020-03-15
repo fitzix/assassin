@@ -8,6 +8,6 @@ type ImageUploadReq struct {
 
 type Carousel struct {
 	ID    uint   `json:"-"`
-	AppId uint64 `json:"-"`
+	AppID uint64 `json:"-"`
 	Url   string `json:"url"`
 }

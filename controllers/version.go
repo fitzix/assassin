@@ -22,6 +22,7 @@ func AppVersion(c *gin.Context) {
 
 func VersionCreate(c *gin.Context) {
 	a := service.NewAsnGin(c)
+
 	var up service.AppVersion
 
 	if err := c.ShouldBind(&up); err != nil {
