@@ -33,7 +33,7 @@ func Route(r *gin.Engine) {
 		auth.POST("/apps", controllers.AppCreate)
 		auth.PUT("/apps/:id", controllers.AppUpdate)
 		// tags
-		auth.PUT("/apps/:id/tags", controllers.AppTagsCreateOrUpdate)
+		auth.PUT("/apps/:id/tags", controllers.AppTagsUpdate)
 		// categories
 		auth.PUT("/apps/:id/categories", controllers.AppCategoryUpdate)
 		// version

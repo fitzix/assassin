@@ -153,7 +153,7 @@ func AppCategoryUpdate(c *gin.Context) {
 	a.Success(appCategories)
 }
 
-func AppTagsCreateOrUpdate(c *gin.Context) {
+func AppTagsUpdate(c *gin.Context) {
 	a := service.NewAsnGin(c)
 	var req []uint
 	var uri models.AppIndexReq

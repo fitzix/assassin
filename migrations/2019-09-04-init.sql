@@ -81,7 +81,8 @@ CREATE TABLE "version" (
     "name"       VARCHAR(30)       NOT NULL,
     "size"       INT8 DEFAULT 0    NOT NULL,
     "created_at" TIMESTAMP         NOT NULL,
-    "status"     BOOL DEFAULT TRUE NOT NULL
+    "status"     BOOL DEFAULT TRUE NOT NULL,
+    CONSTRAINT "unique_app_version" UNIQUE ("app_id", "name")
 );
 CREATE INDEX ON "version" ("app_id");
 

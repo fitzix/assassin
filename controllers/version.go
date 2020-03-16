@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/fitzix/assassin/models"
@@ -23,13 +24,18 @@ func AppVersion(c *gin.Context) {
 func VersionCreate(c *gin.Context) {
 	a := service.NewAsnGin(c)
 
-	var up service.AppVersion
+	var up models.Version
 
 	if err := c.ShouldBind(&up); err != nil {
 		a.Fail(service.StatusParamErr, err)
 		return
 	}
-	// up.AppId = c.Param("id")
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		a.Fail(service.StatusParamErr, err)
+		return
+	}
+	up.AppId = uint64(id)
 
 	tx := a.D.Begin()
 	if err := tx.Create(&up).Error; err != nil {
