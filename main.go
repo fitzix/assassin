@@ -4,6 +4,7 @@ import (
 	"github.com/fitzix/assassin/middlewares"
 	"github.com/fitzix/assassin/router"
 	"github.com/fitzix/assassin/service"
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,6 +17,7 @@ func main() {
 	r.Use(middlewares.CORS())
 
 	router.Route(r)
+	pprof.Register(r)
 
 	if err := r.Run(); err != nil {
 		service.GetLogger().Fatal(err)

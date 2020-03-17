@@ -29,7 +29,6 @@ var (
 	logger *zap.SugaredLogger
 	db     *gorm.DB
 	s3     *minio.Client
-	Flake  *sonyflake.Sonyflake
 )
 
 func initConf() {
@@ -55,6 +54,7 @@ func initConf() {
 		},
 		S3: models.S3{
 			Endpoint:        "play.min.io",
+			ImgPrefix:       "images",
 			AccessKeyID:     "Q3AM3UQ867SPQQA43P2F",
 			SecretAccessKey: "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG",
 			UseSSL:          false,
@@ -171,7 +171,7 @@ func initS3() {
 }
 
 func initSnow() {
-	Flake = sonyflake.NewSonyflake(sonyflake.Settings{
+	_ = sonyflake.NewSonyflake(sonyflake.Settings{
 		StartTime: time.Now(),
 	})
 }

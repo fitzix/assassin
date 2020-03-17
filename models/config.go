@@ -41,6 +41,7 @@ type Encrypt struct {
 
 type S3 struct {
 	Endpoint        string
+	ImgPrefix       string
 	AccessKeyID     string
 	SecretAccessKey string
 	UseSSL          bool

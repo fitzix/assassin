@@ -25,5 +25,6 @@ func CategoryList(c *gin.Context) {
 }
 func CategoryIndex(c *gin.Context)  {}
 func CategoryUpdate(c *gin.Context) {}
-func CategoryCreate(c *gin.Context) {}
+func CategoryCreate(c *gin.Context) {
+}
 func CategoryDelete(c *gin.Context) {}

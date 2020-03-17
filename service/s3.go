@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"mime/multipart"
+	"path"
 	"path/filepath"
 
 	"github.com/fitzix/assassin/consts"
@@ -62,14 +63,15 @@ func setS3Policy(policy string) {
 }
 
 func PutImage(file *multipart.FileHeader) (string, error) {
-	fileName := "images/" + utils.GenNanoId() + filepath.Ext(file.Filename)
+	fileName := utils.GenNanoId() + filepath.Ext(file.Filename)
+	filePath := path.Join(conf.ImgPrefix, fileName)
 	f, err := file.Open()
 	if err != nil {
 		return "", err
 	}
 	defer f.Close()
-	if _, err := s3.PutObject(conf.Bucket, fileName, f, file.Size, minio.PutObjectOptions{}); err != nil {
+	if _, err := s3.PutObject(conf.Bucket, filePath, f, file.Size, minio.PutObjectOptions{}); err != nil {
 		return "", err
 	}
-	return conf.Endpoint + fileName, nil
+	return fileName, nil
 }
